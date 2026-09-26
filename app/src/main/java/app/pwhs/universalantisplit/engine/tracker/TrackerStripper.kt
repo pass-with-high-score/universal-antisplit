@@ -1,15 +1,18 @@
 package app.pwhs.universalantisplit.engine.tracker
 
 import timber.log.Timber
+import java.io.File
 import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
+import java.util.zip.Adler32
 import java.util.zip.ZipFile
 
 /**
  * Strips tracker components from a merged APK by:
- * 1. Scanning DEX class lists for known tracker signatures
- * 2. Neutralizing tracker-related manifest entries (services, receivers, providers)
+ * 1. Scanning DEX class lists for known tracker signatures (Exodus Privacy)
+ * 2. Neutralizing tracker-related manifest entries and permissions in-place
  * 3. Removing tracker native libraries (.so files)
- * 4. Removing tracker-related permissions
+ * 4. Neutralizing DEX class descriptors and recalculating DEX checksums
  */
 class TrackerStripper(private val trackerDatabase: TrackerDatabase) {
 
@@ -51,24 +54,35 @@ class TrackerStripper(private val trackerDatabase: TrackerDatabase) {
         "libsegment",
     )
 
-    /** Scan DEX class list from a ZIP (APK) and detect trackers. */
-    fun detectTrackersInApk(apkFile: java.io.File): List<TrackerEntry> {
+    /** Scan DEX class list across multiple APK files and detect trackers. */
+    fun detectTrackersInApks(apkFiles: List<File>): List<TrackerEntry> {
         trackerDatabase.load()
         val classNames = mutableSetOf<String>()
 
-        ZipFile(apkFile).use { zip ->
-            val entries = zip.entries()
-            while (entries.hasMoreElements()) {
-                val entry = entries.nextElement()
-                val name = entry.name
-                if (name.matches(Regex("^classes\\d*\\.dex$"))) {
-                    classNames.addAll(extractClassNamesFromDex(zip, entry))
+        for (file in apkFiles) {
+            if (!file.exists()) continue
+            try {
+                ZipFile(file).use { zip ->
+                    val entries = zip.entries()
+                    while (entries.hasMoreElements()) {
+                        val entry = entries.nextElement()
+                        if (entry.name.matches(Regex("^classes\\d*\\.dex$"))) {
+                            classNames.addAll(extractClassNamesFromDex(zip, entry))
+                        }
+                    }
                 }
+            } catch (e: Exception) {
+                Timber.w(e, "Failed to extract classes from ${file.name}")
             }
         }
 
-        Timber.d("Scanned ${classNames.size} classes from DEX files")
+        Timber.d("Scanned ${classNames.size} classes from DEX files across ${apkFiles.size} APKs")
         return trackerDatabase.detectTrackers(classNames)
+    }
+
+    /** Scan DEX class list from a single APK file and detect trackers. */
+    fun detectTrackersInApk(apkFile: File): List<TrackerEntry> {
+        return detectTrackersInApks(listOf(apkFile))
     }
 
     /** Determine if a ZIP entry name is a tracker native lib. */
@@ -79,8 +93,22 @@ class TrackerStripper(private val trackerDatabase: TrackerDatabase) {
     }
 
     /**
-     * Neutralize tracker manifest entries by replacing package names in the binary AXML.
-     * Uses the same byte-level replacement technique as KotlinManifestSanitizer.
+     * Mutates the last byte of an ASCII pattern by +/- 1 so the string length
+     * remains identical without shifting bytecode/offsets or corrupting tables.
+     */
+    fun mutatePattern(pattern: ByteArray): ByteArray {
+        val result = pattern.copyOf()
+        if (result.isNotEmpty()) {
+            val last = result[result.size - 1].toInt() and 0xFF
+            val next = if (last >= 126) last - 1 else last + 1
+            result[result.size - 1] = next.toByte()
+        }
+        return result
+    }
+
+    /**
+     * Neutralize tracker manifest entries by mutating package names in the binary AXML.
+     * Preserves exact length to avoid corrupting string offsets or pool lengths.
      */
     fun neutralizeTrackerManifest(
         axmlData: ByteArray,
@@ -88,54 +116,107 @@ class TrackerStripper(private val trackerDatabase: TrackerDatabase) {
     ): Pair<ByteArray, Int> {
         if (detectedTrackers.isEmpty()) return axmlData to 0
 
-        val prefixes = trackerDatabase.getTrackerPackagePrefixes(detectedTrackers)
+        val manifestPatterns = detectedTrackers.flatMap { entry ->
+            entry.code.split("|").map { it.trim().removeSuffix(".") }
+        }.filter { it.length >= 5 }
+            .distinct()
+            .sortedByDescending { it.length }
+
         val buffer = axmlData.copyOf()
         var neutralizedCount = 0
 
-        for (prefix in prefixes) {
-            val dotPrefix = prefix.replace('/', '.')
-            if (dotPrefix.length < 5) continue // Skip too-short prefixes
+        for (patternStr in manifestPatterns) {
+            val target = patternStr.toByteArray(StandardCharsets.US_ASCII)
+            val replacement = mutatePattern(target)
+            val count8 = replaceAllOccurrences(buffer, target, replacement)
 
-            val target = dotPrefix.toByteArray(StandardCharsets.US_ASCII)
-            val replacement = buildNeutralizedBytes(target)
-            val count = replaceAllOccurrences(buffer, target, replacement)
+            val utf16Target = toUtf16Le(target)
+            val utf16Replacement = toUtf16Le(replacement)
+            val count16 = replaceAllOccurrences(buffer, utf16Target, utf16Replacement)
 
-            if (count > 0) {
-                val utf16Target = toUtf16Le(target)
-                val utf16Replacement = toUtf16Le(replacement)
-                replaceAllOccurrences(buffer, utf16Target, utf16Replacement)
-                neutralizedCount += count
-            }
+            neutralizedCount += (count8 + count16)
         }
 
         // Also neutralize tracker permissions
         for (perm in trackerPermissions) {
             val target = perm.toByteArray(StandardCharsets.US_ASCII)
-            val replacement = buildNeutralizedBytes(target)
-            val count = replaceAllOccurrences(buffer, target, replacement)
-            if (count > 0) {
-                val utf16Target = toUtf16Le(target)
-                val utf16Replacement = toUtf16Le(replacement)
-                replaceAllOccurrences(buffer, utf16Target, utf16Replacement)
-                neutralizedCount += count
-            }
+            val replacement = mutatePattern(target)
+            val count8 = replaceAllOccurrences(buffer, target, replacement)
+
+            val utf16Target = toUtf16Le(target)
+            val utf16Replacement = toUtf16Le(replacement)
+            val count16 = replaceAllOccurrences(buffer, utf16Target, utf16Replacement)
+
+            neutralizedCount += (count8 + count16)
         }
 
-        Timber.i("Neutralized $neutralizedCount tracker manifest entries")
+        Timber.i("Neutralized $neutralizedCount tracker manifest occurrences")
         return buffer to neutralizedCount
     }
 
-    /** Build a neutralized byte array of the same length. Prefix with "__stripped_". */
-    private fun buildNeutralizedBytes(original: ByteArray): ByteArray {
-        val prefix = "__stripped_".toByteArray(StandardCharsets.US_ASCII)
-        val result = ByteArray(original.size)
-        val prefixLen = prefix.size.coerceAtMost(original.size)
-        System.arraycopy(prefix, 0, result, 0, prefixLen)
-        // Fill remaining with underscores
-        for (i in prefixLen until original.size) {
-            result[i] = '_'.code.toByte()
+    /**
+     * Neutralizes class descriptors in DEX files (e.g. Lcom/facebook/ads/) in-place,
+     * then recalculates SHA-1 and Adler32 checksums in the DEX header.
+     */
+    fun neutralizeDexTrackers(
+        dexBytes: ByteArray,
+        detectedTrackers: List<TrackerEntry>,
+    ): ByteArray {
+        if (detectedTrackers.isEmpty() || dexBytes.size < 112) return dexBytes
+        if (dexBytes[0] != 'd'.code.toByte() || dexBytes[1] != 'e'.code.toByte() ||
+            dexBytes[2] != 'x'.code.toByte() || dexBytes[3] != '\n'.code.toByte()
+        ) {
+            return dexBytes
         }
-        return result
+
+        val dexPatterns = detectedTrackers.flatMap { entry ->
+            entry.code.split("|").map { sig ->
+                "L" + sig.trim().removeSuffix(".").replace('.', '/')
+            }
+        }.filter { it.length >= 6 }
+            .distinct()
+            .sortedByDescending { it.length }
+
+        val buffer = dexBytes.copyOf()
+        var totalReplaced = 0
+
+        for (patternStr in dexPatterns) {
+            val target = patternStr.toByteArray(StandardCharsets.US_ASCII)
+            val replacement = mutatePattern(target)
+            val count = replaceAllOccurrences(buffer, target, replacement)
+            totalReplaced += count
+        }
+
+        if (totalReplaced > 0) {
+            updateDexChecksums(buffer)
+            Timber.d("Neutralized $totalReplaced tracker descriptors in DEX file")
+        }
+        return buffer
+    }
+
+    /**
+     * Updates SHA-1 and Adler32 checksums in the DEX header:
+     * - SHA-1 (bytes 12..31) covers bytes 32..end
+     * - Adler32 (bytes 8..11, little-endian) covers bytes 12..end
+     */
+    private fun updateDexChecksums(buffer: ByteArray) {
+        if (buffer.size < 112) return
+        try {
+            val md = MessageDigest.getInstance("SHA-1")
+            md.update(buffer, 32, buffer.size - 32)
+            val sha1 = md.digest()
+            System.arraycopy(sha1, 0, buffer, 12, 20)
+
+            val adler = Adler32()
+            adler.update(buffer, 12, buffer.size - 12)
+            val checksum = adler.value
+            buffer[8] = (checksum and 0xFF).toByte()
+            buffer[9] = ((checksum shr 8) and 0xFF).toByte()
+            buffer[10] = ((checksum shr 16) and 0xFF).toByte()
+            buffer[11] = ((checksum shr 24) and 0xFF).toByte()
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to update DEX checksums")
+        }
     }
 
     private fun replaceAllOccurrences(
@@ -185,7 +266,6 @@ class TrackerStripper(private val trackerDatabase: TrackerDatabase) {
         val classes = mutableSetOf<String>()
         try {
             val bytes = zip.getInputStream(entry).use { it.readBytes() }
-            // DEX magic: "dex\n035\0" or similar
             if (bytes.size < 112) return classes
 
             val stringIdsOff = readInt(bytes, 60)
@@ -195,9 +275,7 @@ class TrackerStripper(private val trackerDatabase: TrackerDatabase) {
                 val off = readInt(bytes, stringIdsOff + i * 4)
                 if (off < 0 || off >= bytes.size) continue
                 val str = readMutf8String(bytes, off) ?: continue
-                // Class descriptors: Lcom/facebook/ads/Ad;
                 if (str.startsWith("L") && str.endsWith(";") && str.contains("/")) {
-                    // Convert: Lcom/facebook/ads/Ad; -> com/facebook/ads/Ad.class
                     val className = str.substring(1, str.length - 1) + ".class"
                     classes.add(className)
                 }
@@ -219,10 +297,9 @@ class TrackerStripper(private val trackerDatabase: TrackerDatabase) {
     /** Read a MUTF-8 string from DEX string data (LEB128 length prefix). */
     private fun readMutf8String(data: ByteArray, offset: Int): String? {
         var pos = offset
-        // Skip ULEB128 length
         while (pos < data.size && (data[pos].toInt() and 0x80) != 0) pos++
         if (pos >= data.size) return null
-        pos++ // skip final byte of ULEB128
+        pos++
 
         val sb = StringBuilder()
         var count = 0
