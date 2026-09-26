@@ -164,13 +164,12 @@ class ApkMerger(
                     if (dexNum > maxDex) maxDex = dexNum
 
                     existingEntries.add(name)
-                    val rawBytes = zip.getInputStream(entry).use { it.readBytes() }
-                    val cleanBytes = if (detectedTrackers.isNotEmpty() && trackerStripper != null) {
-                        trackerStripper.neutralizeDexTrackers(rawBytes, detectedTrackers)
-                    } else {
-                        rawBytes
+                    zip.getInputStream(entry).use { input ->
+                        val newEntry = ZipEntry(name)
+                        zos.putNextEntry(newEntry)
+                        input.copyTo(zos)
+                        zos.closeEntry()
                     }
-                    writeZipEntry(zos, name, cleanBytes)
                     continue
                 }
 
@@ -216,13 +215,12 @@ class ApkMerger(
                     nextDex++
                     val renumberedName = "classes$nextDex.dex"
                     existingEntries.add(renumberedName)
-                    val rawBytes = zip.getInputStream(entry).use { it.readBytes() }
-                    val cleanBytes = if (detectedTrackers.isNotEmpty() && trackerStripper != null) {
-                        trackerStripper.neutralizeDexTrackers(rawBytes, detectedTrackers)
-                    } else {
-                        rawBytes
+                    zip.getInputStream(entry).use { input ->
+                        val newEntry = ZipEntry(renumberedName)
+                        zos.putNextEntry(newEntry)
+                        input.copyTo(zos)
+                        zos.closeEntry()
                     }
-                    writeZipEntry(zos, renumberedName, cleanBytes)
                     continue
                 }
 
