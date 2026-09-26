@@ -336,6 +336,31 @@ fun MainScreen(
                                 onCheckedChange = { viewModel.onToggleAutoSign(it) }
                             )
                         }
+
+                        Spacer(Modifier.height(Spacing.L))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(R.string.setting_strip_trackers_title),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(
+                                    text = stringResource(R.string.setting_strip_trackers_desc, 428),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Switch(
+                                checked = state.stripTrackers,
+                                onCheckedChange = { viewModel.onToggleStripTrackers(it) }
+                            )
+                        }
                     }
                 }
             }

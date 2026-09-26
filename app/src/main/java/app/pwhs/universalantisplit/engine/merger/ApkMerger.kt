@@ -4,6 +4,7 @@ import android.content.Context
 import app.pwhs.universalantisplit.R
 import app.pwhs.universalantisplit.engine.RustAntiSplitBridge
 import app.pwhs.universalantisplit.engine.signer.ApkSignerManager
+import app.pwhs.universalantisplit.engine.tracker.TrackerStripper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -17,6 +18,7 @@ import java.util.zip.ZipOutputStream
 data class MergeOptions(
     val useRustEngine: Boolean = true,
     val autoSign: Boolean = true,
+    val stripTrackers: Boolean = false,
 )
 
 /**
@@ -26,6 +28,7 @@ data class MergeOptions(
 class ApkMerger(
     private val context: Context,
     private val signerManager: ApkSignerManager = ApkSignerManager(context),
+    private val trackerStripper: TrackerStripper? = null,
 ) {
 
     private val dexRegex = Regex("""^classes(\d*)\.dex$""")
@@ -61,7 +64,21 @@ class ApkMerger(
                     useRustEngine = options.useRustEngine
                 )
 
-                // Step 2: Merge each split APK
+                // Step 2: Detect and strip trackers if enabled
+                val detectedTrackers = if (options.stripTrackers && trackerStripper != null) {
+                    onProgress(0.4f, R.string.status_stripping_trackers, 0)
+                    trackerStripper.detectTrackersInApk(baseApkFile)
+                } else {
+                    emptyList()
+                }
+                val trackerPrefixes = if (detectedTrackers.isNotEmpty()) {
+                    Timber.i("Detected ${detectedTrackers.size} trackers to strip")
+                    trackerStripper?.getTrackerPackagePrefixes(detectedTrackers) ?: emptySet()
+                } else {
+                    emptySet()
+                }
+
+                // Step 3: Merge each split APK
                 onProgress(0.5f, R.string.status_merging_resources, 0)
                 var currentDexIndex = highestDexIndex
                 for ((index, splitFile) in splitFiles.withIndex()) {
@@ -73,12 +90,13 @@ class ApkMerger(
                         splitFile = splitFile,
                         zos = zos,
                         existingEntries = existingEntryNames,
-                        currentDexIndex = currentDexIndex
+                        currentDexIndex = currentDexIndex,
+                        stripTrackerLibs = options.stripTrackers,
                     )
                 }
             }
 
-            // Step 3: Sign the APK or copy directly
+            // Step 4: Sign the APK or copy directly
             if (options.autoSign) {
                 onProgress(0.85f, R.string.status_signing_apk, 0)
                 val signResult = signerManager.signApk(
@@ -127,7 +145,18 @@ class ApkMerger(
 
                 if (name == "AndroidManifest.xml") {
                     val rawBytes = zip.getInputStream(entry).use { it.readBytes() }
-                    val sanitizedBytes = sanitizeManifest(rawBytes, useRustEngine)
+                    var sanitizedBytes = sanitizeManifest(rawBytes, useRustEngine)
+                    // Strip tracker manifest entries if trackerStripper is available
+                    if (trackerStripper != null) {
+                        val detected = trackerStripper.detectTrackersInApk(baseApkFile)
+                        if (detected.isNotEmpty()) {
+                            val (patched, count) = trackerStripper.neutralizeTrackerManifest(
+                                sanitizedBytes, detected
+                            )
+                            sanitizedBytes = patched
+                            Timber.i("Neutralized $count tracker entries in manifest")
+                        }
+                    }
                     writeZipEntry(zos, name, sanitizedBytes)
                     existingEntries.add(name)
                     continue
@@ -157,6 +186,7 @@ class ApkMerger(
         zos: ZipOutputStream,
         existingEntries: MutableSet<String>,
         currentDexIndex: Int,
+        stripTrackerLibs: Boolean = false,
     ): Int {
         var nextDex = currentDexIndex
         ZipFile(splitFile).use { zip ->
@@ -186,6 +216,11 @@ class ApkMerger(
 
                 // For all other files (lib/*.so, assets/*, res/*)
                 if (name !in existingEntries) {
+                    // Skip tracker native libs if stripping enabled
+                    if (stripTrackerLibs && trackerStripper != null && trackerStripper.isTrackerNativeLib(name)) {
+                        Timber.d("Stripped tracker native lib: $name")
+                        continue
+                    }
                     existingEntries.add(name)
                     zip.getInputStream(entry).use { input ->
                         val newEntry = ZipEntry(name)

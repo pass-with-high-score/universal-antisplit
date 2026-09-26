@@ -1,0 +1,44 @@
+{
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/**": true,
+    "**/.gradle/**": true,
+    "**/build/**": true,
+    "**/.idea/**": true,
+    "**/.kotlin/**": true,
+    "**/.cxx/**": true,
+    "**/.externalNativeBuild/**": true,
+    "**/captures/**": true,
+    "**/.gemini/**": true,
+    "**/.agents/**": true,
+    "**/dist/**": true,
+    "**/*.apk": true,
+    "**/*.aab": true,
+    "**/*.idsig": true,
+    "**/*.dex": true,
+    "**/*.class": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.gradle": true,
+    "**/build": true,
+    "**/.idea": true,
+    "**/.kotlin": true,
+    "**/.cxx": true,
+    "**/.externalNativeBuild": true,
+    "**/captures": true,
+    "**/.gemini": true,
+    "**/.agents": true,
+    "**/dist": true,
+    "**/*.apk": true,
+    "**/*.aab": true,
+    "**/*.idsig": true,
+    "**/*.dex": true,
+    "**/*.class": true
+  },
+  "files.exclude": {
+    "**/.git": true,
+    "**/.DS_Store": true
+  }
+}

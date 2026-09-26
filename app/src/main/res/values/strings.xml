@@ -64,6 +64,9 @@
     <string name="merge_progress_percent">%1$d%%</string>
     <string name="merge_progress_step_label">Bước hiện tại</string>
     <string name="merge_progress_please_wait">Vui lòng không tắt ứng dụng trong quá trình hợp nhất</string>
+    <string name="status_stripping_trackers">Đang quét và loại bỏ tracker…</string>
+    <string name="setting_strip_trackers_title">Loại bỏ Tracker (Exodus Privacy)</string>
+    <string name="setting_strip_trackers_desc">Quét và vô hiệu hóa tracker quảng cáo, analytics, theo dõi dựa trên cơ sở dữ liệu Exodus (%1$d tracker)</string>
 
     <!-- App Picker Sheet -->
     <string name="picker_title">Chọn ứng dụng trên máy</string>
