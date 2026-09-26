@@ -1,0 +1,106 @@
+<resources>
+    <string name="app_name">Universal Anti-Split</string>
+    <string name="app_subtitle">Split APK Merger &amp; Binary Patching</string>
+    <string name="app_description">Công cụ gộp Split APK (XAPK, APKM, APKS, AAB) thành tệp APK độc lập, thiết kế đồng bộ cùng Universal Installer.</string>
+    <string name="app_version_info">Phiên bản 1.0 (Build 1) • Rust NDK Core</string>
+
+    <!-- Main Screen -->
+    <string name="engine_rust_native">Rust Native</string>
+    <string name="engine_kotlin_jvm">Kotlin JVM</string>
+    <string name="status_analyzing_structure">Đang phân tích cấu trúc Split APK (%1$d tệp)...</string>
+    <string name="status_cleaning_manifest">Đang dọn dẹp binary AndroidManifest.xml...</string>
+    <string name="status_merging_resources">Đang hợp nhất resources.arsc &amp; renumber DEX...</string>
+    <string name="status_signing_apk">Đang ký APK bằng Google apksig (v1/v2/v3)...</string>
+    <string name="status_merge_completed">Hợp nhất hoàn tất!</string>
+    <string name="status_analyzing_file">Đang phân tích tệp...</string>
+    <string name="msg_please_select_file">Vui lòng chọn Split APK / XAPK / APKM trước.</string>
+    <string name="msg_please_select_component">Vui lòng chọn ít nhất một thành phần APK để gộp.</string>
+    <string name="msg_selected_app">Đã chọn: %1$s</string>
+    <string name="msg_loaded_file">Đã nạp: %1$s</string>
+    <string name="msg_cannot_read_file">Không thể đọc tệp APK/XAPK/APKM được chọn.</string>
+    <string name="msg_copied_package">Đã sao chép: %1$s</string>
+    <string name="msg_merge_failed">Quá trình gộp APK thất bại: %1$s</string>
+    <string name="action_install_merged">Cài đặt APK</string>
+    <string name="action_share_merged">Chia sẻ</string>
+    <string name="dialog_merge_complete_title">Gộp APK thành công!</string>
+    <string name="dialog_merge_complete_desc">Tệp APK độc lập đã được tạo và lưu tại:\n%1$s</string>
+
+    <!-- Empty State -->
+    <string name="empty_state_title">Chưa chọn ứng dụng hoặc tệp nào</string>
+    <string name="empty_state_subtitle">Chọn một ứng dụng cài sẵn trên máy có chứa Split APKs, hoặc duyệt tệp từ bộ nhớ máy (.apk, .xapk, .apkm, .apks).</string>
+    <string name="btn_installed_apps">App trong máy</string>
+    <string name="btn_pick_external_file">Chọn tệp ngoài</string>
+
+    <!-- Selected App Card -->
+    <string name="action_change">Đổi</string>
+    <string name="version_prefix">v%1$s</string>
+    <string name="badge_installed_app">Ứng dụng trong máy</string>
+    <string name="badge_external_file">Tệp lưu trữ ngoài</string>
+    <string name="badge_single_apk">Single APK</string>
+    <string name="badge_splits_count">%1$d Splits</string>
+    <string name="warning_pairip">Phát hiện Google PairIP / Play Integrity. APK sau khi gộp có thể cần bypass bổ sung để chạy độc lập.</string>
+
+    <!-- Split Components Section -->
+    <string name="section_components_title">Danh sách APK Components (%1$d/%2$d)</string>
+    <string name="chip_select_all">Chọn tất cả (%1$d)</string>
+    <string name="chip_core_only">Chỉ Core (base.apk)</string>
+    <string name="badge_core_required">Bắt buộc (Core)</string>
+    <string name="badge_abi_native">ABI Native</string>
+    <string name="badge_language">Ngôn ngữ</string>
+    <string name="badge_screen_density">Màn hình</string>
+    <string name="badge_auxiliary">Phụ trợ</string>
+
+    <!-- Engine & Signature Card on Main Screen -->
+    <string name="section_engine_signature">Cấu hình Engine &amp; Ký số</string>
+    <string name="setting_rust_core_title">Rust Native NDK Core</string>
+    <string name="setting_rust_core_desc">Tối đa hiệu năng xử lý binary XML &amp; chunk resources (fallback Kotlin nếu tắt)</string>
+    <string name="setting_auto_sign_title">Tự động ký số (Google apksig)</string>
+    <string name="setting_auto_sign_desc">Tạo Keystore RSA 2048-bit trên thiết bị và ký với Scheme v1/v2/v3</string>
+
+    <!-- Merge Actions -->
+    <string name="btn_start_merge">Bắt đầu hợp nhất (%1$d components)</string>
+    <string name="btn_merging">Đang xử lý hợp nhất...</string>
+    <string name="merge_progress_title">Đang hợp nhất APK...</string>
+    <string name="merge_progress_percent">%1$d%%</string>
+    <string name="merge_progress_step_label">Bước hiện tại</string>
+    <string name="merge_progress_please_wait">Vui lòng không tắt ứng dụng trong quá trình hợp nhất</string>
+
+    <!-- App Picker Sheet -->
+    <string name="picker_title">Chọn ứng dụng trên máy</string>
+    <string name="picker_subtitle">Tìm thấy %1$d ứng dụng (%2$d Split APKs)</string>
+    <string name="picker_search_hint">Tìm kiếm tên app hoặc package...</string>
+    <string name="picker_filter_all">Tất cả (%1$d)</string>
+    <string name="picker_filter_only_splits">Chỉ Split APKs (%1$d)</string>
+    <string name="picker_loading">Đang tải danh sách ứng dụng...</string>
+    <string name="action_close">Đóng</string>
+    <string name="action_clear">Xoá</string>
+    <string name="action_copy">Sao chép</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Cài đặt</string>
+    <string name="settings_nav_back">Quay lại</string>
+    <string name="settings_section_appearance">Giao diện &amp; Chủ đề</string>
+    <string name="settings_theme_mode_title">Chế độ hiển thị</string>
+    <string name="settings_theme_system">Hệ thống</string>
+    <string name="settings_theme_light">Sáng</string>
+    <string name="settings_theme_dark">Tối</string>
+    <string name="settings_amoled_title">Chế độ AMOLED</string>
+    <string name="settings_amoled_desc">Nền đen thuần (Pure Black) tiết kiệm pin tối đa cho màn hình OLED</string>
+    <string name="settings_dynamic_color_title">Màu sắc động (Material You)</string>
+    <string name="settings_dynamic_color_desc">Đồng bộ màu sắc giao diện theo hình nền hệ thống Android 12+</string>
+    <string name="settings_preset_color_title">Màu chủ đạo ứng dụng</string>
+
+    <string name="settings_section_engine">Động cơ &amp; Tối ưu hóa (Engine)</string>
+    <string name="settings_rust_desc">Sử dụng engine nhị phân librust_antisplit.so cho tốc độ gộp tối đa</string>
+    <string name="settings_align16kb_title">Căn chỉnh 16KB Page Size</string>
+    <string name="settings_align16kb_desc">Tối ưu hóa các thư viện native .so để tương thích đầy đủ Android 15+</string>
+    <string name="settings_clean_cache_title">Dọn dẹp cache tự động</string>
+    <string name="settings_clean_cache_desc">Tự động xóa các tệp APK tạm trong bộ nhớ đệm sau khi hoàn tất</string>
+
+    <string name="settings_section_signature">Ký số APK (Google apksig)</string>
+    <string name="settings_auto_sign_desc">Ký APK với khóa Keystore RSA-2048 (Scheme v1, v2, v3)</string>
+    <string name="settings_default_keystore_label">Khóa ký mặc định</string>
+    <string name="settings_default_keystore_value">Universal Keystore RSA-2048 • SHA256withRSA</string>
+
+    <string name="settings_section_about">Thông tin ứng dụng</string>
+</resources>

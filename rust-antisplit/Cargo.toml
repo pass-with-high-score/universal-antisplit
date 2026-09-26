@@ -1,0 +1,16 @@
+[package]
+name = "rust-antisplit"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "rust_antisplit"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+jni = "0.21"
+log = "0.4"
+android_logger = "0.14"
+thiserror = "2.0"
+zip = { version = "2.2", default-features = false, features = ["deflate"] }
+byteorder = "1.5"
