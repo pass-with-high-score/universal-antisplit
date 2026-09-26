@@ -1,0 +1,69 @@
+# Fastfile for Universal Anti-Split
+# Requires: KEYSTORE_FILE (base64), KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD env vars for release lane
+
+default_platform(:android)
+
+platform :android do
+
+  desc "Run unit tests"
+  lane :test do
+    gradle(task: "test")
+  end
+
+  desc "Build debug APK"
+  lane :build_debug do
+    gradle(
+      task: "assemble",
+      build_type: "Debug"
+    )
+    apk_path = lane_context[SharedValues::GRADLE_APK_OUTPUT_PATH]
+    UI.success("✅ Debug APK: #{apk_path}")
+  end
+
+  desc "Build release APK (unsigned – sign via CI keystore)"
+  lane :build_release do
+    # Decode keystore from base64 env var if available
+    if ENV["KEYSTORE_FILE"]
+      keystore_path = "#{Dir.pwd}/release.keystore"
+      require "base64"
+      File.write(keystore_path, Base64.decode64(ENV["KEYSTORE_FILE"]))
+
+      gradle(
+        task: "assemble",
+        build_type: "Release",
+        properties: {
+          "android.injected.signing.store.file"     => keystore_path,
+          "android.injected.signing.store.password" => ENV["KEYSTORE_PASSWORD"],
+          "android.injected.signing.key.alias"      => ENV["KEY_ALIAS"],
+          "android.injected.signing.key.password"   => ENV["KEY_PASSWORD"],
+        }
+      )
+    else
+      gradle(task: "assemble", build_type: "Release")
+    end
+
+    apk_path = lane_context[SharedValues::GRADLE_APK_OUTPUT_PATH]
+    UI.success("✅ Release APK: #{apk_path}")
+  end
+
+  desc "Build release APK and create GitHub Release"
+  lane :release do
+    # Bump versionCode via git tag (e.g. v1.2.3)
+    build_release
+
+    apk_path = lane_context[SharedValues::GRADLE_APK_OUTPUT_PATH]
+
+    # Create GitHub release and upload APK
+    github_release = set_github_release(
+      repository_name: "pass-with-high-score/universal-antisplit",
+      api_token: ENV["GITHUB_TOKEN"],
+      name: ENV["RELEASE_TAG"] || "Release",
+      tag_name: ENV["RELEASE_TAG"] || "v1.0",
+      description: File.exist?("CHANGELOG.md") ? File.read("CHANGELOG.md") : "Universal Anti-Split release",
+      upload_assets: [apk_path]
+    )
+
+    UI.success("🚀 GitHub Release created: #{github_release['html_url']}")
+  end
+
+end
