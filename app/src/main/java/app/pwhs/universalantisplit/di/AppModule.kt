@@ -19,9 +19,7 @@ val appModule = module {
     single<DataRepository> { DefaultDataRepository() }
     single<app.pwhs.universalantisplit.data.scanner.PackageScanner> { app.pwhs.universalantisplit.data.scanner.DefaultPackageScanner(get()) }
     single { app.pwhs.universalantisplit.engine.signer.ApkSignerManager(get()) }
-    single { app.pwhs.universalantisplit.engine.tracker.TrackerDatabase(get()) }
-    single { app.pwhs.universalantisplit.engine.tracker.TrackerStripper(get()) }
-    single { app.pwhs.universalantisplit.engine.merger.ApkMerger(get(), get(), get()) }
+    single { app.pwhs.universalantisplit.engine.merger.ApkMerger(get(), get()) }
     single { app.pwhs.universalantisplit.engine.merger.ApkOutputManager(get()) }
     single { app.pwhs.universalantisplit.engine.merger.SplitExtractionHelper(get()) }
 

@@ -14,7 +14,6 @@ object PreferenceKeys {
     val DYNAMIC_COLOR = booleanPreferencesKey("dynamic_color")
     val AMOLED_MODE = booleanPreferencesKey("amoled_mode")
     val THEME_PRESET = stringPreferencesKey("theme_preset")
-    val USE_RUST_ENGINE = booleanPreferencesKey("use_rust_engine")
     val AUTO_SIGN = booleanPreferencesKey("auto_sign")
     val ALIGN_16KB = booleanPreferencesKey("align_16kb")
     val CLEAN_CACHE = booleanPreferencesKey("clean_cache")

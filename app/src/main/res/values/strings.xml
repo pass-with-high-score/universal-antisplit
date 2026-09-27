@@ -5,8 +5,6 @@
     <string name="app_version_info">Phiên bản 1.0 (Build 1) • Rust NDK Core</string>
 
     <!-- Main Screen -->
-    <string name="engine_rust_native">Rust Native</string>
-    <string name="engine_kotlin_jvm">Kotlin JVM</string>
     <string name="status_analyzing_structure">Đang phân tích cấu trúc Split APK (%1$d tệp)...</string>
     <string name="status_cleaning_manifest">Đang dọn dẹp binary AndroidManifest.xml...</string>
     <string name="status_merging_resources">Đang hợp nhất resources.arsc &amp; renumber DEX...</string>
@@ -50,10 +48,8 @@
     <string name="badge_screen_density">Màn hình</string>
     <string name="badge_auxiliary">Phụ trợ</string>
 
-    <!-- Engine & Signature Card on Main Screen -->
-    <string name="section_engine_signature">Cấu hình Engine &amp; Ký số</string>
-    <string name="setting_rust_core_title">Rust Native NDK Core</string>
-    <string name="setting_rust_core_desc">Tối đa hiệu năng xử lý binary XML &amp; chunk resources (fallback Kotlin nếu tắt)</string>
+    <!-- Signature Card on Main Screen -->
+    <string name="section_engine_signature">Cấu hình Ký số APK</string>
     <string name="setting_auto_sign_title">Tự động ký số (Google apksig)</string>
     <string name="setting_auto_sign_desc">Tạo Keystore RSA 2048-bit trên thiết bị và ký với Scheme v1/v2/v3</string>
 
@@ -64,9 +60,6 @@
     <string name="merge_progress_percent">%1$d%%</string>
     <string name="merge_progress_step_label">Bước hiện tại</string>
     <string name="merge_progress_please_wait">Vui lòng không tắt ứng dụng trong quá trình hợp nhất</string>
-    <string name="status_stripping_trackers">Đang quét và loại bỏ tracker…</string>
-    <string name="setting_strip_trackers_title">Loại bỏ Tracker (Exodus Privacy)</string>
-    <string name="setting_strip_trackers_desc">Quét và vô hiệu hóa tracker quảng cáo, analytics, theo dõi dựa trên cơ sở dữ liệu Exodus (%1$d tracker)</string>
 
     <!-- App Picker Sheet -->
     <string name="picker_title">Chọn ứng dụng trên máy</string>
@@ -93,8 +86,7 @@
     <string name="settings_dynamic_color_desc">Đồng bộ màu sắc giao diện theo hình nền hệ thống Android 12+</string>
     <string name="settings_preset_color_title">Màu chủ đạo ứng dụng</string>
 
-    <string name="settings_section_engine">Động cơ &amp; Tối ưu hóa (Engine)</string>
-    <string name="settings_rust_desc">Sử dụng engine nhị phân librust_antisplit.so cho tốc độ gộp tối đa</string>
+    <string name="settings_section_engine">Tối ưu hóa &amp; Dọn dẹp</string>
     <string name="settings_align16kb_title">Căn chỉnh 16KB Page Size</string>
     <string name="settings_align16kb_desc">Tối ưu hóa các thư viện native .so để tương thích đầy đủ Android 15+</string>
     <string name="settings_clean_cache_title">Dọn dẹp cache tự động</string>

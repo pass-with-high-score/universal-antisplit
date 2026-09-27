@@ -33,9 +33,7 @@ data class MainUiState(
     val splitItems: List<String> = emptyList(),
     val selectedSplitItems: Set<String> = emptySet(),
     val isPairIpDetected: Boolean = false,
-    val useRustEngine: Boolean = true,
     val autoSignMergedApk: Boolean = true,
-    val stripTrackers: Boolean = false,
     val isMerging: Boolean = false,
     val mergeProgress: Float = 0f,
     val mergeStatusText: String = "",
@@ -174,16 +172,8 @@ class MainScreenViewModel(
         }
     }
 
-    fun onToggleEngine(useRust: Boolean) {
-        _uiState.update { it.copy(useRustEngine = useRust) }
-    }
-
     fun onToggleAutoSign(autoSign: Boolean) {
         _uiState.update { it.copy(autoSignMergedApk = autoSign) }
-    }
-
-    fun onToggleStripTrackers(strip: Boolean) {
-        _uiState.update { it.copy(stripTrackers = strip) }
     }
 
     fun onStartMerge() {
@@ -231,9 +221,7 @@ class MainScreenViewModel(
                     splitFiles = extracted.splitApks,
                     outputApkFile = tempMergedFile,
                     options = MergeOptions(
-                        useRustEngine = state.useRustEngine,
                         autoSign = state.autoSignMergedApk,
-                        stripTrackers = state.stripTrackers,
                     ),
                     onProgress = { progress, statusResId, count ->
                         val text = if (count > 0) context.getString(statusResId, count) else context.getString(statusResId)
@@ -289,9 +277,7 @@ class MainScreenViewModel(
         _uiState.update {
             MainUiState(
                 installedApps = it.installedApps,
-                useRustEngine = it.useRustEngine,
                 autoSignMergedApk = it.autoSignMergedApk,
-                stripTrackers = it.stripTrackers,
             )
         }
     }

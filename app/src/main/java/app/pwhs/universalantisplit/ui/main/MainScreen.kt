@@ -62,7 +62,6 @@ import org.koin.androidx.compose.koinViewModel
 import app.pwhs.universalantisplit.ui.components.AppPickerSheet
 import app.pwhs.universalantisplit.ui.components.EmptyStateView
 import app.pwhs.universalantisplit.ui.components.SettingsSection
-import app.pwhs.universalantisplit.ui.components.StatusBadge
 import app.pwhs.universalantisplit.ui.main.components.MergeProgressSheet
 import app.pwhs.universalantisplit.ui.main.components.MergeSuccessDialog
 import app.pwhs.universalantisplit.ui.main.components.SelectedAppCard
@@ -160,11 +159,6 @@ fun MainScreen(
                     }
                 },
                 actions = {
-                    StatusBadge(
-                        text = if (state.useRustEngine) stringResource(R.string.engine_rust_native) else stringResource(R.string.engine_kotlin_jvm),
-                        containerColor = if (state.useRustEngine) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = if (state.useRustEngine) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer,
-                    )
                     IconButton(
                         onClick = { onItemClick(Settings) }
                     ) {
@@ -280,7 +274,7 @@ fun MainScreen(
                 }
             }
 
-            // Engine & Signature Settings
+            // Signature Settings
             item {
                 SettingsSection(
                     title = stringResource(R.string.section_engine_signature),
@@ -289,31 +283,6 @@ fun MainScreen(
                     defaultExpanded = true,
                 ) {
                     Column(modifier = Modifier.padding(Spacing.L)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = stringResource(R.string.setting_rust_core_title),
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                                Text(
-                                    text = stringResource(R.string.setting_rust_core_desc),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            Switch(
-                                checked = state.useRustEngine,
-                                onCheckedChange = { viewModel.onToggleEngine(it) }
-                            )
-                        }
-
-                        Spacer(Modifier.height(Spacing.L))
-
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -334,31 +303,6 @@ fun MainScreen(
                             Switch(
                                 checked = state.autoSignMergedApk,
                                 onCheckedChange = { viewModel.onToggleAutoSign(it) }
-                            )
-                        }
-
-                        Spacer(Modifier.height(Spacing.L))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = stringResource(R.string.setting_strip_trackers_title),
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                                Text(
-                                    text = stringResource(R.string.setting_strip_trackers_desc, 428),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            Switch(
-                                checked = state.stripTrackers,
-                                onCheckedChange = { viewModel.onToggleStripTrackers(it) }
                             )
                         }
                     }

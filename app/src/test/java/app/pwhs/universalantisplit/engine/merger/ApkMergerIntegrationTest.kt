@@ -91,7 +91,7 @@ class ApkMergerIntegrationTest {
             baseApkFile = baseApk,
             splitFiles = listOf(splitApk),
             outputApkFile = outputApk,
-            options = MergeOptions(useRustEngine = false, autoSign = true)
+            options = MergeOptions(autoSign = true)
         )
 
         assertTrue("Merge pipeline failed: ${result.exceptionOrNull()?.message}", result.isSuccess)

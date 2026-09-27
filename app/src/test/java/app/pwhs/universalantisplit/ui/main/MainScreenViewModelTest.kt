@@ -54,7 +54,6 @@ class MainScreenViewModelTest {
         val viewModel = createViewModel()
         val state = viewModel.uiState.first()
         assertEquals(null, state.selectedAppName)
-        assertTrue(state.useRustEngine)
         assertTrue(state.autoSignMergedApk)
     }
 

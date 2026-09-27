@@ -259,7 +259,7 @@ fun SettingsScreen(
                 }
             }
 
-            // 2. Cấu hình Engine Anti-Split
+            // 2. Cấu hình Tối ưu hóa Anti-Split
             item {
                 SettingsSection(
                     title = stringResource(R.string.settings_section_engine),
@@ -268,31 +268,6 @@ fun SettingsScreen(
                     defaultExpanded = true,
                 ) {
                     Column(modifier = Modifier.padding(Spacing.L)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = stringResource(R.string.setting_rust_core_title),
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                                Text(
-                                    text = stringResource(R.string.settings_rust_desc),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            Switch(
-                                checked = state.useRustEngine,
-                                onCheckedChange = { viewModel.setUseRustEngine(it) }
-                            )
-                        }
-
-                        Spacer(Modifier.height(Spacing.L))
-
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,

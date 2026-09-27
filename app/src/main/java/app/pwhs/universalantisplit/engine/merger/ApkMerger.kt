@@ -4,8 +4,6 @@ import android.content.Context
 import app.pwhs.universalantisplit.R
 import app.pwhs.universalantisplit.engine.RustAntiSplitBridge
 import app.pwhs.universalantisplit.engine.signer.ApkSignerManager
-import app.pwhs.universalantisplit.engine.tracker.TrackerEntry
-import app.pwhs.universalantisplit.engine.tracker.TrackerStripper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -17,9 +15,7 @@ import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
 
 data class MergeOptions(
-    val useRustEngine: Boolean = true,
     val autoSign: Boolean = true,
-    val stripTrackers: Boolean = false,
 )
 
 /**
@@ -29,7 +25,6 @@ data class MergeOptions(
 class ApkMerger(
     private val context: Context,
     private val signerManager: ApkSignerManager = ApkSignerManager(context),
-    private val trackerStripper: TrackerStripper? = null,
 ) {
 
     private val dexRegex = Regex("""^classes(\d*)\.dex$""")
@@ -54,17 +49,6 @@ class ApkMerger(
             val existingEntryNames = mutableSetOf<String>()
             var highestDexIndex = 1
 
-            // Pre-scan trackers if stripping is enabled
-            val detectedTrackers = if (options.stripTrackers && trackerStripper != null) {
-                onProgress(0.15f, R.string.status_stripping_trackers, 0)
-                val allApks = listOf(baseApkFile) + splitFiles
-                val detected = trackerStripper.detectTrackersInApks(allApks)
-                Timber.i("Detected ${detected.size} trackers across APK files to strip")
-                detected
-            } else {
-                emptyList()
-            }
-
             ZipOutputStream(BufferedOutputStream(FileOutputStream(tempUnsignedApk))).use { zos ->
                 // Step 1: Process base.apk
                 onProgress(0.3f, R.string.status_cleaning_manifest, 0)
@@ -72,8 +56,6 @@ class ApkMerger(
                     baseApkFile = baseApkFile,
                     zos = zos,
                     existingEntries = existingEntryNames,
-                    useRustEngine = options.useRustEngine,
-                    detectedTrackers = detectedTrackers,
                 )
 
                 // Step 2: Merge each split APK
@@ -89,7 +71,6 @@ class ApkMerger(
                         zos = zos,
                         existingEntries = existingEntryNames,
                         currentDexIndex = currentDexIndex,
-                        detectedTrackers = detectedTrackers,
                     )
                 }
             }
@@ -128,8 +109,6 @@ class ApkMerger(
         baseApkFile: File,
         zos: ZipOutputStream,
         existingEntries: MutableSet<String>,
-        useRustEngine: Boolean,
-        detectedTrackers: List<TrackerEntry> = emptyList(),
     ): Int {
         var maxDex = 0
         ZipFile(baseApkFile).use { zip ->
@@ -144,14 +123,7 @@ class ApkMerger(
 
                 if (name == "AndroidManifest.xml") {
                     val rawBytes = zip.getInputStream(entry).use { it.readBytes() }
-                    var sanitizedBytes = sanitizeManifest(rawBytes, useRustEngine)
-                    if (detectedTrackers.isNotEmpty() && trackerStripper != null) {
-                        val (patched, count) = trackerStripper.neutralizeTrackerManifest(
-                            sanitizedBytes, detectedTrackers
-                        )
-                        sanitizedBytes = patched
-                        Timber.i("Neutralized $count tracker entries in manifest")
-                    }
+                    val sanitizedBytes = sanitizeManifest(rawBytes)
                     writeZipEntry(zos, name, sanitizedBytes)
                     existingEntries.add(name)
                     continue
@@ -173,12 +145,6 @@ class ApkMerger(
                     continue
                 }
 
-                // Skip tracker native libs if stripping enabled
-                if (detectedTrackers.isNotEmpty() && trackerStripper != null && trackerStripper.isTrackerNativeLib(name)) {
-                    Timber.d("Stripped tracker native lib in base APK: $name")
-                    continue
-                }
-
                 existingEntries.add(name)
                 zip.getInputStream(entry).use { input ->
                     val newEntry = ZipEntry(name)
@@ -196,7 +162,6 @@ class ApkMerger(
         zos: ZipOutputStream,
         existingEntries: MutableSet<String>,
         currentDexIndex: Int,
-        detectedTrackers: List<TrackerEntry> = emptyList(),
     ): Int {
         var nextDex = currentDexIndex
         ZipFile(splitFile).use { zip ->
@@ -226,11 +191,6 @@ class ApkMerger(
 
                 // For all other files (lib/*.so, assets/*, res/*)
                 if (name !in existingEntries) {
-                    // Skip tracker native libs if stripping enabled
-                    if (detectedTrackers.isNotEmpty() && trackerStripper != null && trackerStripper.isTrackerNativeLib(name)) {
-                        Timber.d("Stripped tracker native lib in split APK: $name")
-                        continue
-                    }
                     existingEntries.add(name)
                     zip.getInputStream(entry).use { input ->
                         val newEntry = ZipEntry(name)
@@ -244,18 +204,25 @@ class ApkMerger(
         return nextDex
     }
 
-    private fun sanitizeManifest(rawBytes: ByteArray, useRustEngine: Boolean): ByteArray {
+    /**
+     * Sanitizes AndroidManifest.xml by prioritizing the high-performance Rust Native Core
+     * with automatic fallback to KotlinManifestSanitizer if unavailable.
+     */
+    private fun sanitizeManifest(rawBytes: ByteArray): ByteArray {
         var processed = rawBytes
-        if (useRustEngine && RustAntiSplitBridge.isNativeEngineAvailable()) {
-            processed = runCatching {
+        if (RustAntiSplitBridge.isNativeEngineAvailable()) {
+            val nativeResult = runCatching {
                 RustAntiSplitBridge.nativeSanitizeManifest(processed)
-            }.getOrElse {
-                Timber.w(it, "Native sanitize failed, continuing with raw bytes")
-                rawBytes
             }
+            if (nativeResult.isSuccess) {
+                processed = nativeResult.getOrThrow()
+                Timber.d("Manifest sanitized via Rust Native Core")
+            } else {
+                Timber.w(nativeResult.exceptionOrNull(), "Rust Native Core failed, falling back to Kotlin")
+            }
+        } else {
+            Timber.d("Rust Native unavailable, using KotlinManifestSanitizer")
         }
-        // Always run KotlinManifestSanitizer as final pass to guarantee
-        // extractNativeLibs neutralization (prevents INSTALL_FAILED_INVALID_APK res=-2)
         return KotlinManifestSanitizer.sanitize(processed)
     }
 

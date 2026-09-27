@@ -20,7 +20,6 @@ data class SettingsUiState(
     val dynamicColor: Boolean = false,
     val amoledMode: Boolean = false,
     val themePreset: AppThemePreset = AppThemePreset.Orange,
-    val useRustEngine: Boolean = true,
     val autoSign: Boolean = true,
     val align16Kb: Boolean = true,
     val cleanCache: Boolean = true,
@@ -43,7 +42,6 @@ class SettingsScreenViewModel(
                 val amoledMode = prefs[PreferenceKeys.AMOLED_MODE] ?: false
                 val presetName = prefs[PreferenceKeys.THEME_PRESET] ?: AppThemePreset.Orange.name
                 val themePreset = AppThemePreset.entries.find { it.name == presetName } ?: AppThemePreset.Orange
-                val useRust = prefs[PreferenceKeys.USE_RUST_ENGINE] ?: true
                 val autoSign = prefs[PreferenceKeys.AUTO_SIGN] ?: true
                 val align16Kb = prefs[PreferenceKeys.ALIGN_16KB] ?: true
                 val cleanCache = prefs[PreferenceKeys.CLEAN_CACHE] ?: true
@@ -55,7 +53,6 @@ class SettingsScreenViewModel(
                         dynamicColor = dynamicColor,
                         amoledMode = amoledMode,
                         themePreset = themePreset,
-                        useRustEngine = useRust,
                         autoSign = autoSign,
                         align16Kb = align16Kb,
                         cleanCache = cleanCache,
@@ -94,14 +91,6 @@ class SettingsScreenViewModel(
         viewModelScope.launch {
             context.dataStore.edit { prefs ->
                 prefs[PreferenceKeys.THEME_PRESET] = preset.name
-            }
-        }
-    }
-
-    fun setUseRustEngine(enabled: Boolean) {
-        viewModelScope.launch {
-            context.dataStore.edit { prefs ->
-                prefs[PreferenceKeys.USE_RUST_ENGINE] = enabled
             }
         }
     }
