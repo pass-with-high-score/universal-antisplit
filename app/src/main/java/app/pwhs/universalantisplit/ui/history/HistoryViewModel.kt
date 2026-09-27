@@ -1,9 +1,11 @@
 package app.pwhs.universalantisplit.ui.history
 
+import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.pwhs.universalantisplit.data.local.db.entity.ConversionHistory
 import app.pwhs.universalantisplit.data.repository.HistoryRepository
+import app.pwhs.universalantisplit.engine.merger.ApkOutputManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -11,6 +13,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.File
 
 enum class HistoryStatusFilter {
     ALL,
@@ -64,10 +67,15 @@ data class HistoryUiState(
 
 class HistoryViewModel(
     private val historyRepository: HistoryRepository,
+    private val apkOutputManager: ApkOutputManager,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HistoryUiState())
     val uiState: StateFlow<HistoryUiState> = _uiState.asStateFlow()
+
+    fun resolveApkFile(outputPath: String): File? = apkOutputManager.resolveApkFile(outputPath)
+
+    fun createShareIntent(file: File): Intent = apkOutputManager.createShareIntent(file)
 
     init {
         historyRepository.getAllHistory()

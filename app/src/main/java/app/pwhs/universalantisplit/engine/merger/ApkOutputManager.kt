@@ -87,6 +87,26 @@ class ApkOutputManager(private val context: Context) {
 
         OutputDestination(localFile, localUri, publicPath)
     }
+    fun resolveApkFile(outputPath: String): File? {
+        if (outputPath.isBlank()) return null
+        val direct = File(outputPath)
+        if (direct.exists() && direct.isFile) return direct
+
+        // Check in app-specific merged dir
+        val localDir = context.getExternalFilesDir("merged") ?: context.filesDir
+        val localFile = File(localDir, direct.name)
+        if (localFile.exists() && localFile.isFile) return localFile
+
+        // Check in public Downloads directory
+        val publicDir = File(
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+            "UniversalAntiSplit"
+        )
+        val publicFile = File(publicDir, direct.name)
+        if (publicFile.exists() && publicFile.isFile) return publicFile
+
+        return null
+    }
 
     fun createInstallIntent(file: File): Intent {
         val uri = FileProvider.getUriForFile(

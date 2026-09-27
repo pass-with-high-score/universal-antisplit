@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.rounded.Android
+import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -52,6 +53,7 @@ import java.util.Locale
 @Composable
 fun HistoryItemCard(
     item: ConversionHistory,
+    onShare: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -74,8 +76,12 @@ fun HistoryItemCard(
             } else {
                 runCatching {
                     if (item.outputPath.isNotBlank()) {
-                        val file = File(item.outputPath)
-                        if (file.exists()) {
+                        val direct = File(item.outputPath)
+                        val file = if (direct.exists()) direct else {
+                            val localDir = context.getExternalFilesDir("merged") ?: context.filesDir
+                            File(localDir, direct.name).takeIf { it.exists() }
+                        }
+                        if (file != null && file.exists()) {
                             val pm = context.packageManager
                             val pi = pm.getPackageArchiveInfo(file.absolutePath, 0)
                             val appInfo = pi?.applicationInfo
@@ -92,6 +98,8 @@ fun HistoryItemCard(
     }
 
     OutlinedCard(
+        onClick = onShare,
+        enabled = item.isSuccessful,
         modifier = modifier.fillMaxWidth(),
         border = CardDefaults.outlinedCardBorder()
     ) {
@@ -159,6 +167,18 @@ fun HistoryItemCard(
                 }
 
                 Spacer(Modifier.width(4.dp))
+
+                if (item.isSuccessful) {
+                    IconButton(onClick = onShare, modifier = Modifier.size(32.dp)) {
+                        Icon(
+                            Icons.Rounded.Share,
+                            contentDescription = stringResource(R.string.history_share_apk),
+                            modifier = Modifier.size(18.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Spacer(Modifier.width(4.dp))
+                }
 
                 IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
                     Icon(

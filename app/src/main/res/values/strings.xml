@@ -119,6 +119,8 @@
     <string name="history_output_path">Đường dẫn: %1$s</string>
     <string name="history_error_message">Lỗi: %1$s</string>
     <string name="history_deleted_item">Đã xóa mục khỏi lịch sử</string>
+    <string name="history_share_apk">Chia sẻ tệp APK</string>
+    <string name="history_file_not_found">Không tìm thấy tệp APK hoặc tệp đã bị xóa.</string>
 
     <!-- Quản lý bộ nhớ đệm -->
     <string name="cache_section_title">Quản lý bộ nhớ đệm</string>

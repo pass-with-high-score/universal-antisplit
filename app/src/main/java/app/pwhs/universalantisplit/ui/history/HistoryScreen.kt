@@ -1,5 +1,7 @@
 package app.pwhs.universalantisplit.ui.history
 
+import android.content.Intent
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -47,6 +49,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -62,6 +65,7 @@ fun HistoryScreen(
     viewModel: HistoryViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
     var isSearchActive by rememberSaveable { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
 
@@ -274,6 +278,21 @@ fun HistoryScreen(
                     items(uiState.filteredHistoryList, key = { it.id }) { item ->
                         HistoryItemCard(
                             item = item,
+                            onShare = {
+                                val file = viewModel.resolveApkFile(item.outputPath)
+                                if (file != null && file.exists()) {
+                                    val shareIntent = Intent.createChooser(viewModel.createShareIntent(file), null).apply {
+                                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    }
+                                    context.startActivity(shareIntent)
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        context.getString(R.string.history_file_not_found),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            },
                             onDelete = { viewModel.deleteItem(item) }
                         )
                     }
