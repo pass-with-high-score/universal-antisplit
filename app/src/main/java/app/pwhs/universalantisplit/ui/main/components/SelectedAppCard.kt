@@ -99,27 +99,26 @@ fun SelectedAppCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // App Avatar
-                Surface(
-                    shape = RoundedCornerShape(18.dp),
-                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                    tonalElevation = 2.dp,
-                    modifier = Modifier.size(64.dp)
-                ) {
-                    if (displayIcon != null) {
-                        Image(
-                            bitmap = displayIcon.asImageBitmap(),
-                            contentDescription = appName,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clip(RoundedCornerShape(18.dp))
-                        )
-                    } else {
+                if (displayIcon != null) {
+                    Image(
+                        bitmap = displayIcon.asImageBitmap(),
+                        contentDescription = appName,
+                        modifier = Modifier
+                            .size(56.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                    )
+                } else {
+                    Surface(
+                        shape = RoundedCornerShape(14.dp),
+                        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        modifier = Modifier.size(56.dp)
+                    ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Rounded.Android,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(36.dp)
+                                modifier = Modifier.size(32.dp)
                             )
                         }
                     }
