@@ -103,4 +103,32 @@
     <string name="msg_package_not_found">Không tìm thấy gói ứng dụng %1$s trên thiết bị.</string>
     <string name="msg_loading_intent_source">Đang nhận yêu cầu gộp APK từ ứng dụng ngoài...</string>
     <string name="msg_file_received_from_app">Đã nhận tệp từ ứng dụng ngoài: %1$s</string>
+
+    <!-- Lịch sử chuyển đổi -->
+    <string name="history_title">Lịch sử chuyển đổi</string>
+    <string name="history_empty_title">Chưa có lịch sử</string>
+    <string name="history_empty_subtitle">Các lần gộp APK sẽ được lưu lại tại đây sau khi hoàn tất.</string>
+    <string name="history_clear_all">Xóa tất cả</string>
+    <string name="history_confirm_clear_title">Xác nhận xóa lịch sử</string>
+    <string name="history_confirm_clear_message">Bạn có chắc chắn muốn xóa toàn bộ lịch sử? Hành động này không thể hoàn tác.</string>
+    <string name="history_source_installed">Ứng dụng trong máy</string>
+    <string name="history_source_container">Tệp lưu trữ</string>
+    <string name="history_status_success">Thành công</string>
+    <string name="history_status_failed">Thất bại</string>
+    <string name="history_splits_count">%1$d splits</string>
+    <string name="history_output_path">Đường dẫn: %1$s</string>
+    <string name="history_error_message">Lỗi: %1$s</string>
+    <string name="history_deleted_item">Đã xóa mục khỏi lịch sử</string>
+
+    <!-- Quản lý bộ nhớ đệm -->
+    <string name="cache_section_title">Quản lý bộ nhớ đệm</string>
+    <string name="cache_size_label">Dung lượng đệm hiện tại</string>
+    <string name="cache_clear_temp">Xóa tệp tạm</string>
+    <string name="cache_clear_all">Xóa tất cả (kể cả APK đã gộp)</string>
+    <string name="cache_clearing">Đang xóa...</string>
+    <string name="cache_cleared_success">Đã xóa bộ nhớ đệm thành công</string>
+    <string name="cache_confirm_clear_all_title">Xác nhận xóa toàn bộ</string>
+    <string name="cache_confirm_clear_all_message">Bao gồm cả các tệp APK đã gộp trong bộ nhớ ứng dụng. Tiếp tục?</string>
+    <string name="action_confirm">Xác nhận</string>
+    <string name="action_cancel">Hủy</string>
 </resources>

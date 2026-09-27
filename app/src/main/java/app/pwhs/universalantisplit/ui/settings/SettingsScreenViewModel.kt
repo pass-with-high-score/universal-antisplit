@@ -4,8 +4,10 @@ import android.content.Context
 import androidx.datastore.preferences.core.edit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.pwhs.universalantisplit.data.cache.AppCacheManager
 import app.pwhs.universalantisplit.data.local.PreferenceKeys
 import app.pwhs.universalantisplit.data.local.dataStore
+import app.pwhs.universalantisplit.data.repository.HistoryRepository
 import app.pwhs.universalantisplit.domain.AppThemePreset
 import app.pwhs.universalantisplit.domain.ThemeMode
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,10 +26,14 @@ data class SettingsUiState(
     val align16Kb: Boolean = true,
     val cleanCache: Boolean = true,
     val outputDir: String = "/sdcard/Download/UniversalAntiSplit",
+    val cacheSize: String = "0 B",
+    val isClearingCache: Boolean = false,
 )
 
 class SettingsScreenViewModel(
     private val context: Context,
+    private val appCacheManager: AppCacheManager,
+    private val historyRepository: HistoryRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -60,6 +66,34 @@ class SettingsScreenViewModel(
                     )
                 }
             }
+        }
+        refreshCacheSize()
+    }
+
+    fun refreshCacheSize() {
+        viewModelScope.launch {
+            val breakdown = appCacheManager.getCacheBreakdown()
+            _uiState.update { it.copy(cacheSize = breakdown.formattedTotalSize) }
+        }
+    }
+
+    fun clearCache(includeLocalMerged: Boolean = false) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isClearingCache = true) }
+            appCacheManager.clearCache(includeLocalMerged)
+            val breakdown = appCacheManager.getCacheBreakdown()
+            _uiState.update {
+                it.copy(
+                    isClearingCache = false,
+                    cacheSize = breakdown.formattedTotalSize
+                )
+            }
+        }
+    }
+
+    fun clearAllHistory() {
+        viewModelScope.launch {
+            historyRepository.clearAllHistory()
         }
     }
 

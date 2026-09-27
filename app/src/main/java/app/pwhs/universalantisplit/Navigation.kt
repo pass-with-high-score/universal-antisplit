@@ -8,6 +8,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
+import app.pwhs.universalantisplit.ui.history.HistoryScreen
 import app.pwhs.universalantisplit.ui.main.MainScreen
 import app.pwhs.universalantisplit.ui.settings.SettingsScreen
 
@@ -24,8 +25,15 @@ fun MainNavigation() {
           MainScreen(onItemClick = { navKey -> backStack.add(navKey) })
         }
         entry<Settings> {
-          SettingsScreen(onBackClick = { backStack.removeLastOrNull() })
+          SettingsScreen(
+            onBackClick = { backStack.removeLastOrNull() },
+            onHistoryClick = { backStack.add(History) }
+          )
+        }
+        entry<History> {
+          HistoryScreen(onNavigateBack = { backStack.removeLastOrNull() })
         }
       },
   )
 }
+

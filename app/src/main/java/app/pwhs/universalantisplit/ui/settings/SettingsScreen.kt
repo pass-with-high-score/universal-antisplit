@@ -23,16 +23,23 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.FolderZip
+import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Key
 import androidx.compose.material.icons.rounded.Memory
 import androidx.compose.material.icons.rounded.Palette
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -61,6 +68,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun SettingsScreen(
     onBackClick: () -> Unit,
+    onHistoryClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: SettingsScreenViewModel = koinViewModel(),
 ) {
@@ -317,6 +325,16 @@ fun SettingsScreen(
                                 onCheckedChange = { viewModel.setCleanCache(it) }
                             )
                         }
+
+                        Spacer(Modifier.height(Spacing.L))
+
+                        CacheManagementSection(
+                            cacheSize = state.cacheSize,
+                            isClearingCache = state.isClearingCache,
+                            onClearTemp = { viewModel.clearCache(includeLocalMerged = false) },
+                            onClearAll = { viewModel.clearCache(includeLocalMerged = true) },
+                            onHistoryClick = onHistoryClick
+                        )
                     }
                 }
             }

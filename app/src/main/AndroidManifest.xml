@@ -24,12 +24,18 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- Universal Installer Plugin Protocol -->
+            <!-- Universal Installer Plugin Protocol: file/bundle merge -->
             <intent-filter>
                 <action android:name="app.pwhs.universalinstaller.action.MERGE_SPLIT" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="application/*" />
                 <data android:mimeType="*/*" />
+            </intent-filter>
+
+            <!-- Universal Installer Plugin Protocol: installed app merge (no data URI) -->
+            <intent-filter>
+                <action android:name="app.pwhs.universalinstaller.action.MERGE_SPLIT" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
 
             <!-- File Association: Open with Universal Anti-Split (ACTION_VIEW) -->

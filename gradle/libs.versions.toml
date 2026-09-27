@@ -19,6 +19,8 @@ timber = "5.0.1"
 apksig = "8.8.0"
 bouncycastle = "1.78.1"
 coil = "2.7.0"
+room = "2.8.5"
+ksp = "2.3.12"
 
 [libraries]
 apksig = { module = "com.android.tools.build:apksig", version.ref = "apksig" }
@@ -53,8 +55,12 @@ koin-android = { module = "io.insert-koin:koin-android" }
 koin-compose = { module = "io.insert-koin:koin-androidx-compose" }
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
+androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
+androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }

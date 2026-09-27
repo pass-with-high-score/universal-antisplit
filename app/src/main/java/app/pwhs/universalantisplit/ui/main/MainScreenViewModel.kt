@@ -7,6 +7,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.pwhs.universalantisplit.R
 import app.pwhs.universalantisplit.data.DataRepository
+import app.pwhs.universalantisplit.data.local.db.entity.ConversionHistory
+import app.pwhs.universalantisplit.data.repository.HistoryRepository
 import app.pwhs.universalantisplit.data.scanner.PackageScanner
 import app.pwhs.universalantisplit.domain.InstalledAppInfo
 import app.pwhs.universalantisplit.domain.SplitPackageInfo
@@ -61,6 +63,7 @@ class MainScreenViewModel(
     private val apkMerger: ApkMerger,
     private val apkOutputManager: ApkOutputManager,
     private val splitExtractionHelper: SplitExtractionHelper,
+    private val historyRepository: HistoryRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MainUiState())
@@ -255,9 +258,39 @@ class MainScreenViewModel(
                     )
                 }
 
+                // 5. Record success to history
+                val state2 = _uiState.value
+                historyRepository.addHistory(
+                    ConversionHistory(
+                        packageName = state2.selectedPackageName ?: "",
+                        appName = state2.selectedAppName ?: "",
+                        versionName = state2.selectedVersionName ?: "",
+                        splitCount = state2.selectedSplitItems.size,
+                        fileSizeBytes = destination.file.length(),
+                        sourceType = if (state2.isInstalledApp) "INSTALLED" else "CONTAINER",
+                        outputPath = destination.displayPath,
+                        isSuccessful = true
+                    )
+                )
+
                 _events.send(MainEvent.MergeCompleted(destination.displayPath, destination.file, destination.uri))
             } catch (t: Throwable) {
                 Timber.e(t, "Merge execution failed")
+                // Record failure to history
+                val failState = _uiState.value
+                historyRepository.addHistory(
+                    ConversionHistory(
+                        packageName = failState.selectedPackageName ?: "",
+                        appName = failState.selectedAppName ?: "",
+                        versionName = failState.selectedVersionName ?: "",
+                        splitCount = failState.selectedSplitItems.size,
+                        fileSizeBytes = 0L,
+                        sourceType = if (failState.isInstalledApp) "INSTALLED" else "CONTAINER",
+                        outputPath = "",
+                        isSuccessful = false,
+                        errorMessage = t.localizedMessage ?: t.message
+                    )
+                )
                 _uiState.update {
                     it.copy(
                         isMerging = false,
