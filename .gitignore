@@ -22,3 +22,4 @@ fastlane/test_output/
 *.keystore
 *.p12
 .keystore_credentials.tmp
+Gemfile.lock

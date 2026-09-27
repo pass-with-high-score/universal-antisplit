@@ -26,7 +26,7 @@ jobs:
       - name: Set up Ruby & Fastlane
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.2'
+          ruby-version: '3.3'
           bundler-cache: true
 
       - name: Grant gradlew execute permission
