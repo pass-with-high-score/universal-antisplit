@@ -27,13 +27,13 @@ import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -202,12 +202,13 @@ fun MainScreen(
             // File selection banner / Empty state
             item {
                 if (state.selectedAppName == null) {
-                    ElevatedCard(
+                    OutlinedCard(
                         modifier = Modifier.fillMaxWidth(),
                         shape = MaterialTheme.shapes.extraLarge,
-                        colors = CardDefaults.elevatedCardColors(
+                        colors = CardDefaults.outlinedCardColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                        )
+                        ),
+                        border = CardDefaults.outlinedCardBorder()
                     ) {
                         Column(
                             modifier = Modifier
