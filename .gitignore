@@ -16,3 +16,9 @@ local.properties
 test_apks/
 .idea/
 .kotlin/
+fastlane/report.xml
+fastlane/test_output/
+*.jks
+*.keystore
+*.p12
+.keystore_credentials.tmp

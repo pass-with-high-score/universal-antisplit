@@ -153,7 +153,7 @@ fun MainScreen(
                         horizontalArrangement = Arrangement.spacedBy(Spacing.M)
                     ) {
                         AsyncImage(
-                            model = R.mipmap.ic_launcher,
+                            model = R.drawable.ic_app_logo,
                             contentDescription = stringResource(R.string.app_name),
                             modifier = Modifier
                                 .size(38.dp)

@@ -124,8 +124,10 @@ class ApkMergerIntegrationTest {
             assertNotNull("lib/arm64-v8a/libnative.so missing", nativeEntry)
         }
 
-        // 5. Verify cryptographic signatures using Google ApkVerifier
-        val verifier = ApkVerifier.Builder(signedFile).build()
+        // 5. Verify cryptographic signatures using Google ApkVerifier (checking against minSdk 21)
+        val verifier = ApkVerifier.Builder(signedFile)
+            .setMinCheckedPlatformVersion(21)
+            .build()
         val verifyResult = verifier.verify()
         assertTrue("APK signature verification failed: ${verifyResult.errors}", verifyResult.isVerified)
         assertTrue("V2 or V3 scheme must be verified", verifyResult.isVerifiedUsingV2Scheme || verifyResult.isVerifiedUsingV3Scheme)
