@@ -25,6 +25,8 @@ class MainActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        app.pwhs.universalantisplit.worker.NotificationHelper.createNotificationChannel(this)
+        requestNotificationPermissionIfNeeded()
         handleIncomingIntent(intent)
         observeViewModelEvents()
 
@@ -73,6 +75,14 @@ class MainActivity : BaseActivity() {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    private fun requestNotificationPermissionIfNeeded() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 101)
             }
         }
     }

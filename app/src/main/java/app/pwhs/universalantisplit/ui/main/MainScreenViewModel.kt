@@ -27,6 +27,12 @@ import timber.log.Timber
 import android.content.Intent
 import android.os.Build
 import app.pwhs.universalantisplit.protocol.UniversalInstallerProtocol
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
+import androidx.work.workDataOf
+import app.pwhs.universalantisplit.worker.ApkMergerWorker
 import java.io.File
 
 data class MainUiState(
@@ -64,6 +70,7 @@ class MainScreenViewModel(
     private val apkOutputManager: ApkOutputManager,
     private val splitExtractionHelper: SplitExtractionHelper,
     private val historyRepository: HistoryRepository,
+    private val workManager: WorkManager,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MainUiState())
@@ -77,6 +84,7 @@ class MainScreenViewModel(
 
     init {
         loadInstalledApps()
+        observeMergeWorker()
     }
 
     fun loadInstalledApps() {
@@ -117,6 +125,7 @@ class MainScreenViewModel(
                 isAppPickerVisible = false,
                 isInstalledApp = true,
                 iconBitmap = null,
+                isMerging = false,
             )
         }
         viewModelScope.launch {
@@ -144,6 +153,7 @@ class MainScreenViewModel(
                         isPairIpDetected = info.isPairIpDetected,
                         isInstalledApp = false,
                         iconBitmap = info.iconBitmap,
+                        isMerging = false,
                     )
                 }
                 _events.send(MainEvent.ShowMessage(context.getString(R.string.msg_loaded_file, info.appName ?: info.name)))
@@ -182,6 +192,89 @@ class MainScreenViewModel(
         _uiState.update { it.copy(autoSignMergedApk = autoSign) }
     }
 
+    private fun observeMergeWorker() {
+        viewModelScope.launch {
+            workManager.getWorkInfosForUniqueWorkFlow(ApkMergerWorker.WORK_NAME).collect { workInfos ->
+                val workInfo = workInfos.firstOrNull() ?: return@collect
+                when (workInfo.state) {
+                    WorkInfo.State.ENQUEUED, WorkInfo.State.BLOCKED -> {
+                        if (_uiState.value.isMerging) {
+                            _uiState.update {
+                                it.copy(
+                                    mergeProgress = 0.05f,
+                                    mergeStatusText = context.getString(R.string.status_analyzing_structure, it.selectedSplitItems.size)
+                                )
+                            }
+                        }
+                    }
+                    WorkInfo.State.RUNNING -> {
+                        val progress = workInfo.progress.getFloat(ApkMergerWorker.KEY_PROGRESS, 0.05f)
+                        val statusText = workInfo.progress.getString(ApkMergerWorker.KEY_STATUS_TEXT)
+                            ?: context.getString(R.string.status_merging_resources)
+                        _uiState.update {
+                            it.copy(
+                                isMerging = true,
+                                mergeProgress = progress,
+                                mergeStatusText = statusText
+                            )
+                        }
+                    }
+                    WorkInfo.State.SUCCEEDED -> {
+                        val wasMerging = _uiState.value.isMerging
+                        val outPath = workInfo.outputData.getString(ApkMergerWorker.KEY_OUTPUT_FILE_PATH)
+                        val displayPath = workInfo.outputData.getString(ApkMergerWorker.KEY_DISPLAY_PATH) ?: outPath ?: ""
+                        val outFile = outPath?.let { File(it) }
+                        _uiState.update {
+                            it.copy(
+                                isMerging = false,
+                                mergeProgress = 1.0f,
+                                mergeStatusText = context.getString(R.string.status_merge_completed),
+                                lastCompletedApkFile = outFile,
+                                lastCompletedDisplayPath = displayPath
+                            )
+                        }
+                        if (wasMerging && outFile != null) {
+                            val uri = try {
+                                androidx.core.content.FileProvider.getUriForFile(
+                                    context,
+                                    "${context.packageName}.provider",
+                                    outFile
+                                )
+                            } catch (e: Exception) {
+                                Uri.fromFile(outFile)
+                            }
+                            _events.send(MainEvent.MergeCompleted(displayPath, outFile, uri))
+                        }
+                    }
+                    WorkInfo.State.FAILED -> {
+                        val wasMerging = _uiState.value.isMerging
+                        val errorMsg = workInfo.outputData.getString(ApkMergerWorker.KEY_ERROR_MESSAGE)
+                            ?: context.getString(R.string.msg_merge_failed, "Unknown error")
+                        _uiState.update {
+                            it.copy(
+                                isMerging = false,
+                                mergeProgress = 0f,
+                                mergeStatusText = ""
+                            )
+                        }
+                        if (wasMerging) {
+                            _events.send(MainEvent.ShowMessage(context.getString(R.string.msg_merge_failed, errorMsg)))
+                        }
+                    }
+                    WorkInfo.State.CANCELLED -> {
+                        _uiState.update {
+                            it.copy(
+                                isMerging = false,
+                                mergeProgress = 0f,
+                                mergeStatusText = ""
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     fun onStartMerge() {
         val state = _uiState.value
         val appName = state.selectedAppName
@@ -200,106 +293,46 @@ class MainScreenViewModel(
             return
         }
 
-        viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    isMerging = true,
-                    mergeProgress = 0.05f,
-                    mergeStatusText = context.getString(R.string.status_analyzing_structure, toMerge.size)
-                )
-            }
+        _uiState.update {
+            it.copy(
+                isMerging = true,
+                mergeProgress = 0.05f,
+                mergeStatusText = context.getString(R.string.status_analyzing_structure, toMerge.size)
+            )
+        }
 
-            try {
-                // 1. Prepare and extract splits
-                val extracted = splitExtractionHelper.prepareForMerge(
-                    isInstalledApp = state.isInstalledApp,
-                    installedBaseApkPath = currentInstalledApp?.baseApkPath,
-                    installedSplitPaths = currentInstalledApp?.splitPaths ?: emptyList(),
-                    externalSourceUri = currentExternalPackage?.sourceUri,
-                    selectedSplitNames = toMerge
-                )
+        val inputData = workDataOf(
+            ApkMergerWorker.KEY_IS_INSTALLED_APP to state.isInstalledApp,
+            ApkMergerWorker.KEY_INSTALLED_BASE_APK_PATH to currentInstalledApp?.baseApkPath,
+            ApkMergerWorker.KEY_INSTALLED_SPLIT_PATHS to (currentInstalledApp?.splitPaths ?: emptyList()).toTypedArray(),
+            ApkMergerWorker.KEY_EXTERNAL_SOURCE_URI to currentExternalPackage?.sourceUri?.toString(),
+            ApkMergerWorker.KEY_SELECTED_SPLIT_NAMES to toMerge.toTypedArray(),
+            ApkMergerWorker.KEY_AUTO_SIGN to state.autoSignMergedApk,
+            ApkMergerWorker.KEY_APP_NAME to appName,
+            ApkMergerWorker.KEY_PACKAGE_NAME to state.selectedPackageName,
+            ApkMergerWorker.KEY_VERSION_NAME to state.selectedVersionName
+        )
 
-                val tempMergedFile = File(context.cacheDir, "merged_output_${System.currentTimeMillis()}.apk")
+        val workRequest = OneTimeWorkRequestBuilder<ApkMergerWorker>()
+            .setInputData(inputData)
+            .addTag("apk_merge")
+            .build()
 
-                // 2. Perform merge
-                val mergeResult = apkMerger.merge(
-                    baseApkFile = extracted.baseApk,
-                    splitFiles = extracted.splitApks,
-                    outputApkFile = tempMergedFile,
-                    options = MergeOptions(
-                        autoSign = state.autoSignMergedApk,
-                    ),
-                    onProgress = { progress, statusResId, count ->
-                        val text = if (count > 0) context.getString(statusResId, count) else context.getString(statusResId)
-                        _uiState.update { it.copy(mergeProgress = progress, mergeStatusText = text) }
-                    }
-                )
+        workManager.enqueueUniqueWork(
+            ApkMergerWorker.WORK_NAME,
+            ExistingWorkPolicy.REPLACE,
+            workRequest
+        )
+    }
 
-                // 3. Clean up staging directory
-                splitExtractionHelper.cleanup(extracted)
-
-                val mergedFile = mergeResult.getOrThrow()
-
-                // 4. Save to Downloads
-                val destination = apkOutputManager.saveToDownloads(
-                    sourceApkFile = mergedFile,
-                    baseName = state.selectedPackageName ?: appName,
-                    versionName = state.selectedVersionName
-                )
-                mergedFile.delete()
-
-                _uiState.update {
-                    it.copy(
-                        isMerging = false,
-                        mergeProgress = 1.0f,
-                        mergeStatusText = context.getString(R.string.status_merge_completed),
-                        lastCompletedApkFile = destination.file,
-                        lastCompletedDisplayPath = destination.displayPath
-                    )
-                }
-
-                // 5. Record success to history
-                val state2 = _uiState.value
-                historyRepository.addHistory(
-                    ConversionHistory(
-                        packageName = state2.selectedPackageName ?: "",
-                        appName = state2.selectedAppName ?: "",
-                        versionName = state2.selectedVersionName ?: "",
-                        splitCount = state2.selectedSplitItems.size,
-                        fileSizeBytes = destination.file.length(),
-                        sourceType = if (state2.isInstalledApp) "INSTALLED" else "CONTAINER",
-                        outputPath = destination.displayPath,
-                        isSuccessful = true
-                    )
-                )
-
-                _events.send(MainEvent.MergeCompleted(destination.displayPath, destination.file, destination.uri))
-            } catch (t: Throwable) {
-                Timber.e(t, "Merge execution failed")
-                // Record failure to history
-                val failState = _uiState.value
-                historyRepository.addHistory(
-                    ConversionHistory(
-                        packageName = failState.selectedPackageName ?: "",
-                        appName = failState.selectedAppName ?: "",
-                        versionName = failState.selectedVersionName ?: "",
-                        splitCount = failState.selectedSplitItems.size,
-                        fileSizeBytes = 0L,
-                        sourceType = if (failState.isInstalledApp) "INSTALLED" else "CONTAINER",
-                        outputPath = "",
-                        isSuccessful = false,
-                        errorMessage = t.localizedMessage ?: t.message
-                    )
-                )
-                _uiState.update {
-                    it.copy(
-                        isMerging = false,
-                        mergeProgress = 0f,
-                        mergeStatusText = ""
-                    )
-                }
-                _events.send(MainEvent.ShowMessage(context.getString(R.string.msg_merge_failed, t.localizedMessage ?: t.message ?: "Unknown error")))
-            }
+    fun onCancelMerge() {
+        workManager.cancelUniqueWork(ApkMergerWorker.WORK_NAME)
+        _uiState.update {
+            it.copy(
+                isMerging = false,
+                mergeProgress = 0f,
+                mergeStatusText = ""
+            )
         }
     }
 

@@ -27,6 +27,9 @@ class MainScreenViewModelTest {
     private lateinit var mockOutputManager: ApkOutputManager
     private lateinit var mockExtractionHelper: SplitExtractionHelper
 
+    private lateinit var mockHistoryRepository: app.pwhs.universalantisplit.data.repository.HistoryRepository
+    private lateinit var mockWorkManager: androidx.work.WorkManager
+
     @Before
     fun setup() {
         mockContext = mockk(relaxed = true) {
@@ -36,6 +39,10 @@ class MainScreenViewModelTest {
         mockMerger = mockk(relaxed = true)
         mockOutputManager = mockk(relaxed = true)
         mockExtractionHelper = mockk(relaxed = true)
+        mockHistoryRepository = mockk(relaxed = true)
+        mockWorkManager = mockk(relaxed = true) {
+            every { getWorkInfosForUniqueWorkFlow(any()) } returns kotlinx.coroutines.flow.flowOf(emptyList())
+        }
     }
 
     private fun createViewModel(): MainScreenViewModel {
@@ -45,7 +52,9 @@ class MainScreenViewModelTest {
             packageScanner = FakeScanner(),
             apkMerger = mockMerger,
             apkOutputManager = mockOutputManager,
-            splitExtractionHelper = mockExtractionHelper
+            splitExtractionHelper = mockExtractionHelper,
+            historyRepository = mockHistoryRepository,
+            workManager = mockWorkManager
         )
     }
 
@@ -98,4 +107,5 @@ private class FakeRepository : DataRepository {
 private class FakeScanner : PackageScanner {
     override suspend fun getInstalledApps(includeSystem: Boolean): List<InstalledAppInfo> = emptyList()
     override suspend fun inspectExternalFile(uri: Uri): SplitPackageInfo? = null
+    override suspend fun getAppByPackageName(packageName: String): InstalledAppInfo? = null
 }

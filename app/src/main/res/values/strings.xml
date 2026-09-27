@@ -131,4 +131,35 @@
     <string name="cache_confirm_clear_all_message">Bao gồm cả các tệp APK đã gộp trong bộ nhớ ứng dụng. Tiếp tục?</string>
     <string name="action_confirm">Xác nhận</string>
     <string name="action_cancel">Hủy</string>
+
+    <!-- Thông báo & Chạy nền (WorkManager) -->
+    <string name="notification_channel_name">Tiến trình gộp APK</string>
+    <string name="notification_channel_desc">Thông báo tiến trình và kết quả gộp Split APKs</string>
+    <string name="notification_merging_title">Đang gộp %1$s</string>
+    <string name="notification_merging_desc">Tiến trình xử lý: %1$d%%</string>
+    <string name="notification_merge_success_title">Gộp APK thành công</string>
+    <string name="notification_merge_success_desc">Đã gộp thành công %1$s</string>
+    <string name="notification_merge_failed_title">Gộp APK thất bại</string>
+    <string name="notification_merge_failed_desc">Không thể gộp %1$s: %2$s</string>
+    <string name="notification_action_install">Cài đặt ngay</string>
+    <string name="notification_action_open">Mở tệp</string>
+    <string name="notification_action_share">Chia sẻ</string>
+    <string name="notification_permission_rationale">Cần quyền thông báo để theo dõi tiến trình chạy nền</string>
+
+    <!-- Thanh điều hướng Bottom Bar -->
+    <string name="nav_merge">Chuyển đổi</string>
+    <string name="nav_history">Lịch sử</string>
+    <string name="nav_settings">Cài đặt</string>
+
+    <!-- Tìm kiếm và bộ lọc Lịch sử -->
+    <string name="history_search_action">Tìm kiếm</string>
+    <string name="history_search_placeholder">Tìm kiếm ứng dụng, gói...</string>
+    <string name="history_filter_all">Tất cả</string>
+    <string name="history_filter_success">Thành công</string>
+    <string name="history_filter_failed">Thất bại</string>
+    <string name="history_filter_installed">Trong máy</string>
+    <string name="history_filter_container">Tệp ngoài</string>
+    <string name="history_no_results_title">Không tìm thấy kết quả</string>
+    <string name="history_no_results_subtitle">Thử tìm kiếm với từ khóa khác hoặc điều chỉnh bộ lọc</string>
+    <string name="history_clear_filters">Xóa bộ lọc</string>
 </resources>

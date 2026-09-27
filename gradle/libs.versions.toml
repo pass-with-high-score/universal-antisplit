@@ -21,6 +21,7 @@ bouncycastle = "1.78.1"
 coil = "2.7.0"
 room = "2.8.5"
 ksp = "2.3.12"
+work = "2.10.0"
 
 [libraries]
 apksig = { module = "com.android.tools.build:apksig", version.ref = "apksig" }
@@ -58,6 +59,7 @@ coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }

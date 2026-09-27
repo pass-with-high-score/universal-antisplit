@@ -40,6 +40,9 @@ val appModule = module {
     // Cache Manager
     single { app.pwhs.universalantisplit.data.cache.AppCacheManager(get()) }
 
+    // WorkManager for background execution
+    single { androidx.work.WorkManager.getInstance(get()) }
+
     viewModelOf(::MainScreenViewModel)
     viewModelOf(::SettingsScreenViewModel)
     viewModelOf(::HistoryViewModel)
