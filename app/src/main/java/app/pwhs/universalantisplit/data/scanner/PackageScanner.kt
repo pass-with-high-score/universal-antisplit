@@ -20,10 +20,49 @@ import java.util.zip.ZipInputStream
 
 interface PackageScanner {
     suspend fun getInstalledApps(includeSystem: Boolean = false): List<InstalledAppInfo>
+    suspend fun getAppByPackageName(packageName: String): InstalledAppInfo?
     suspend fun inspectExternalFile(uri: Uri): SplitPackageInfo?
 }
 
 class DefaultPackageScanner(private val context: Context) : PackageScanner {
+
+    override suspend fun getAppByPackageName(packageName: String): InstalledAppInfo? = withContext(Dispatchers.IO) {
+        val pm = context.packageManager
+        runCatching {
+            val appInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                pm.getApplicationInfo(packageName, PackageManager.ApplicationInfoFlags.of(0))
+            } else {
+                @Suppress("DEPRECATION")
+                pm.getApplicationInfo(packageName, 0)
+            }
+            val base = appInfo.sourceDir ?: ""
+            val splits = appInfo.splitSourceDirs?.toList() ?: emptyList()
+            val isSplit = splits.isNotEmpty()
+
+            var totalSize = if (base.isNotEmpty()) File(base).length() else 0L
+            splits.forEach { totalSize += File(it).length() }
+
+            val pkgInfo = runCatching {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    pm.getPackageInfo(appInfo.packageName, PackageManager.PackageInfoFlags.of(0))
+                } else {
+                    @Suppress("DEPRECATION")
+                    pm.getPackageInfo(appInfo.packageName, 0)
+                }
+            }.getOrNull()
+
+            InstalledAppInfo(
+                appName = appInfo.loadLabel(pm).toString(),
+                packageName = appInfo.packageName,
+                versionName = pkgInfo?.versionName ?: "",
+                baseApkPath = base,
+                splitPaths = splits,
+                isSplitApp = isSplit,
+                sizeBytes = totalSize,
+                sizeFormatted = formatFileSize(totalSize),
+            )
+        }.getOrNull()
+    }
 
     override suspend fun getInstalledApps(includeSystem: Boolean): List<InstalledAppInfo> = withContext(Dispatchers.IO) {
         val pm = context.packageManager

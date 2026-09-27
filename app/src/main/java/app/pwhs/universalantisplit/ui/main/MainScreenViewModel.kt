@@ -292,9 +292,8 @@ class MainScreenViewModel(
             viewModelScope.launch {
                 _events.send(MainEvent.ShowMessage(context.getString(R.string.msg_loading_intent_source)))
                 _uiState.update { it.copy(isLoadingApps = true) }
-                val apps = packageScanner.getInstalledApps()
-                val matched = apps.find { it.packageName == targetPackage }
-                _uiState.update { it.copy(installedApps = apps, isLoadingApps = false) }
+                val matched = packageScanner.getAppByPackageName(targetPackage)
+                _uiState.update { it.copy(isLoadingApps = false) }
 
                 if (matched != null) {
                     onInstalledAppSelected(matched)
