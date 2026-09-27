@@ -22,6 +22,9 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import android.content.Intent
+import android.os.Build
+import app.pwhs.universalantisplit.protocol.UniversalInstallerProtocol
 import java.io.File
 
 data class MainUiState(
@@ -48,7 +51,7 @@ data class MainUiState(
 
 sealed interface MainEvent {
     data class ShowMessage(val message: String) : MainEvent
-    data class MergeCompleted(val outputPath: String, val outputFile: File) : MainEvent
+    data class MergeCompleted(val outputPath: String, val outputFile: File, val outputUri: Uri) : MainEvent
 }
 
 class MainScreenViewModel(
@@ -252,7 +255,7 @@ class MainScreenViewModel(
                     )
                 }
 
-                _events.send(MainEvent.MergeCompleted(destination.displayPath, destination.file))
+                _events.send(MainEvent.MergeCompleted(destination.displayPath, destination.file, destination.uri))
             } catch (t: Throwable) {
                 Timber.e(t, "Merge execution failed")
                 _uiState.update {
@@ -263,6 +266,88 @@ class MainScreenViewModel(
                     )
                 }
                 _events.send(MainEvent.ShowMessage(context.getString(R.string.msg_merge_failed, t.localizedMessage ?: t.message ?: "Unknown error")))
+            }
+        }
+    }
+
+    /**
+     * Handles incoming intent from external apps, file managers, or Universal Installer.
+     */
+    fun handleIncomingIntent(intent: Intent?) {
+        if (intent == null) return
+        val action = intent.action ?: return
+        Timber.i("Processing incoming intent: action=$action, data=${intent.data}")
+
+        // Check auto-sign preference override if provided
+        if (intent.hasExtra(UniversalInstallerProtocol.EXTRA_AUTO_SIGN)) {
+            val autoSign = intent.getBooleanExtra(UniversalInstallerProtocol.EXTRA_AUTO_SIGN, true)
+            onToggleAutoSign(autoSign)
+        }
+
+        val autoStart = intent.getBooleanExtra(UniversalInstallerProtocol.EXTRA_AUTO_START, false)
+
+        // 1. Check if a specific target package was requested (e.g. from Universal Installer)
+        val targetPackage = intent.getStringExtra(UniversalInstallerProtocol.EXTRA_PACKAGE_NAME)
+        if (!targetPackage.isNullOrBlank()) {
+            viewModelScope.launch {
+                _events.send(MainEvent.ShowMessage(context.getString(R.string.msg_loading_intent_source)))
+                _uiState.update { it.copy(isLoadingApps = true) }
+                val apps = packageScanner.getInstalledApps()
+                val matched = apps.find { it.packageName == targetPackage }
+                _uiState.update { it.copy(installedApps = apps, isLoadingApps = false) }
+
+                if (matched != null) {
+                    onInstalledAppSelected(matched)
+                    if (autoStart) {
+                        onStartMerge()
+                    }
+                } else {
+                    _events.send(MainEvent.ShowMessage(context.getString(R.string.msg_package_not_found, targetPackage)))
+                }
+            }
+            return
+        }
+
+        // 2. Check Uri from intent.data or intent.clipData or EXTRA_STREAM
+        val uri = intent.data
+            ?: intent.clipData?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.uri
+            ?: if (action == Intent.ACTION_SEND) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
+                } else {
+                    @Suppress("DEPRECATION")
+                    intent.getParcelableExtra(Intent.EXTRA_STREAM)
+                }
+            } else null
+
+        if (uri != null) {
+            viewModelScope.launch {
+                _events.send(MainEvent.ShowMessage(context.getString(R.string.msg_loading_intent_source)))
+                val info = packageScanner.inspectExternalFile(uri)
+                if (info != null) {
+                    currentExternalPackage = info
+                    currentInstalledApp = null
+                    _uiState.update {
+                        it.copy(
+                            selectedAppName = info.appName ?: info.name,
+                            selectedPackageName = info.packageName,
+                            selectedVersionName = info.versionName,
+                            selectedFileSize = info.sizeFormatted,
+                            splitCount = info.splitNames.size,
+                            splitItems = info.splitNames,
+                            selectedSplitItems = info.splitNames.toSet(),
+                            isPairIpDetected = info.isPairIpDetected,
+                            isInstalledApp = false,
+                            iconBitmap = info.iconBitmap,
+                        )
+                    }
+                    _events.send(MainEvent.ShowMessage(context.getString(R.string.msg_file_received_from_app, info.appName ?: info.name)))
+                    if (autoStart) {
+                        onStartMerge()
+                    }
+                } else {
+                    _events.send(MainEvent.ShowMessage(context.getString(R.string.msg_cannot_read_file)))
+                }
             }
         }
     }

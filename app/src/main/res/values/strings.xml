@@ -98,4 +98,9 @@
     <string name="settings_default_keystore_value">Universal Keystore RSA-2048 • SHA256withRSA</string>
 
     <string name="settings_section_about">Thông tin ứng dụng</string>
+
+    <!-- Universal Installer Protocol & External Intents -->
+    <string name="msg_package_not_found">Không tìm thấy gói ứng dụng %1$s trên thiết bị.</string>
+    <string name="msg_loading_intent_source">Đang nhận yêu cầu gộp APK từ ứng dụng ngoài...</string>
+    <string name="msg_file_received_from_app">Đã nhận tệp từ ứng dụng ngoài: %1$s</string>
 </resources>
