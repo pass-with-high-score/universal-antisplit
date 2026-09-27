@@ -109,4 +109,7 @@ dependencies {
   implementation(libs.apksig)
   implementation(libs.bouncycastle.bcpkix)
   implementation(libs.bouncycastle.bcprov)
+
+  // Coil Image Loading
+  implementation(libs.coil.compose)
 }

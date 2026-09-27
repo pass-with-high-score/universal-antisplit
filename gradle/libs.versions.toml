@@ -18,6 +18,7 @@ datastorePreferences = "1.2.1"
 timber = "5.0.1"
 apksig = "8.8.0"
 bouncycastle = "1.78.1"
+coil = "2.7.0"
 
 [libraries]
 apksig = { module = "com.android.tools.build:apksig", version.ref = "apksig" }
@@ -51,6 +52,7 @@ koin-core = { module = "io.insert-koin:koin-core" }
 koin-android = { module = "io.insert-koin:koin-android" }
 koin-compose = { module = "io.insert-koin:koin-androidx-compose" }
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }

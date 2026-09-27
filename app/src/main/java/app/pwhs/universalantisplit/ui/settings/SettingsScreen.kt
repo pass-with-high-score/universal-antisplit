@@ -2,6 +2,7 @@ package app.pwhs.universalantisplit.ui.settings
 
 import android.os.Build
 import androidx.compose.foundation.background
+import coil.compose.AsyncImage
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -44,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -391,20 +393,13 @@ fun SettingsScreen(
                             .padding(Spacing.L),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Surface(
-                            shape = RoundedCornerShape(20.dp),
-                            color = MaterialTheme.colorScheme.primaryContainer,
-                            modifier = Modifier.size(72.dp)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Rounded.FolderZip,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    modifier = Modifier.size(40.dp)
-                                )
-                            }
-                        }
+                        AsyncImage(
+                            model = R.mipmap.ic_launcher,
+                            contentDescription = stringResource(R.string.app_name),
+                            modifier = Modifier
+                                .size(72.dp)
+                                .clip(RoundedCornerShape(18.dp))
+                        )
 
                         Spacer(Modifier.height(Spacing.M))
 
