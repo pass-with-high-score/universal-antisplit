@@ -18,4 +18,5 @@ object PreferenceKeys {
     val ALIGN_16KB = booleanPreferencesKey("align_16kb")
     val CLEAN_CACHE = booleanPreferencesKey("clean_cache")
     val OUTPUT_DIR = stringPreferencesKey("output_dir")
+    val APP_LANGUAGE = stringPreferencesKey("app_language")
 }

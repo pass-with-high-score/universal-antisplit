@@ -8,6 +8,7 @@ import app.pwhs.universalantisplit.data.cache.AppCacheManager
 import app.pwhs.universalantisplit.data.local.PreferenceKeys
 import app.pwhs.universalantisplit.data.local.dataStore
 import app.pwhs.universalantisplit.data.repository.HistoryRepository
+import app.pwhs.universalantisplit.domain.AppLanguage
 import app.pwhs.universalantisplit.domain.AppThemePreset
 import app.pwhs.universalantisplit.domain.ThemeMode
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,6 +27,7 @@ data class SettingsUiState(
     val align16Kb: Boolean = true,
     val cleanCache: Boolean = true,
     val outputDir: String = "/sdcard/Download/UniversalAntiSplit",
+    val appLanguage: AppLanguage = AppLanguage.System,
     val cacheSize: String = "0 B",
     val isClearingCache: Boolean = false,
 )
@@ -52,6 +54,7 @@ class SettingsScreenViewModel(
                 val align16Kb = prefs[PreferenceKeys.ALIGN_16KB] ?: true
                 val cleanCache = prefs[PreferenceKeys.CLEAN_CACHE] ?: true
                 val outputDir = prefs[PreferenceKeys.OUTPUT_DIR] ?: "/sdcard/Download/UniversalAntiSplit"
+                val appLanguage = AppLanguage.fromTag(prefs[PreferenceKeys.APP_LANGUAGE])
 
                 _uiState.update {
                     it.copy(
@@ -63,6 +66,7 @@ class SettingsScreenViewModel(
                         align16Kb = align16Kb,
                         cleanCache = cleanCache,
                         outputDir = outputDir,
+                        appLanguage = appLanguage,
                     )
                 }
             }

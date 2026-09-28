@@ -7,6 +7,7 @@ import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import app.pwhs.universalantisplit.ui.main.MainScreenViewModel
 import app.pwhs.universalantisplit.ui.settings.SettingsScreenViewModel
+import app.pwhs.universalantisplit.ui.settings.LanguageViewModel
 import app.pwhs.universalantisplit.ui.history.HistoryViewModel
 import app.pwhs.universalantisplit.data.DataRepository
 import app.pwhs.universalantisplit.data.DefaultDataRepository
@@ -45,5 +46,6 @@ val appModule = module {
 
     viewModelOf(::MainScreenViewModel)
     viewModelOf(::SettingsScreenViewModel)
+    viewModelOf(::LanguageViewModel)
     viewModelOf(::HistoryViewModel)
 }

@@ -21,6 +21,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import app.pwhs.universalantisplit.ui.history.HistoryScreen
 import app.pwhs.universalantisplit.ui.main.MainScreen
+import app.pwhs.universalantisplit.ui.settings.LanguageScreen
 import app.pwhs.universalantisplit.ui.settings.SettingsScreen
 
 @Composable
@@ -115,11 +116,15 @@ fun MainNavigation() {
                                 backStack.clear()
                                 backStack.add(Main)
                                 backStack.add(History)
-                            }
+                            },
+                            onLanguageClick = { backStack.add(Language) }
                         )
                     }
                     entry<History> {
                         HistoryScreen(onNavigateBack = null)
+                    }
+                    entry<Language> {
+                        LanguageScreen(onBackClick = { backStack.removeLastOrNull() })
                     }
                 },
         )

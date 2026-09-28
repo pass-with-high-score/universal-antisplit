@@ -153,6 +153,26 @@
     <string name="nav_history">Lịch sử</string>
     <string name="nav_settings">Cài đặt</string>
 
+    <!-- Cài đặt ngôn ngữ -->
+    <string name="language_title">Ngôn ngữ</string>
+    <string name="language_subtitle">Chọn ngôn ngữ hiển thị của ứng dụng</string>
+    <string name="language_system_default">Theo hệ thống</string>
+    <string name="settings_section_language">Ngôn ngữ</string>
+    <string name="settings_language_title">Ngôn ngữ hiển thị</string>
+    <string name="settings_language_desc">Thay đổi ngôn ngữ hiển thị của ứng dụng</string>
+
+    <!-- Tên ngôn ngữ (endonym) - không dịch, hiển thị nguyên bản ở mọi locale -->
+    <string name="language_name_vi">Tiếng Việt</string>
+    <string name="language_name_en">English</string>
+    <string name="language_name_zh">中文</string>
+    <string name="language_name_ko">한국어</string>
+    <string name="language_name_es">Español</string>
+    <string name="language_name_pt">Português</string>
+    <string name="language_name_pt_br">Português (Brasil)</string>
+    <string name="language_name_ru">Русский</string>
+    <string name="language_name_ar">العربية</string>
+    <string name="language_name_fr">Français</string>
+
     <!-- Tìm kiếm và bộ lọc Lịch sử -->
     <string name="history_search_action">Tìm kiếm</string>
     <string name="history_search_placeholder">Tìm kiếm ứng dụng, gói...</string>

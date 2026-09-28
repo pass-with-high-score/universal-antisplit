@@ -1,5 +1,6 @@
 package app.pwhs.universalantisplit.ui.base
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -11,6 +12,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import app.pwhs.universalantisplit.data.local.LocaleManager
 import app.pwhs.universalantisplit.data.local.PreferenceKeys
 import app.pwhs.universalantisplit.data.local.dataStore
 import app.pwhs.universalantisplit.domain.AppThemePreset
@@ -28,6 +30,10 @@ abstract class BaseActivity : ComponentActivity() {
         val amoledMode: Boolean = false,
         val themePreset: AppThemePreset = AppThemePreset.Orange,
     )
+
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(LocaleManager.wrap(newBase))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

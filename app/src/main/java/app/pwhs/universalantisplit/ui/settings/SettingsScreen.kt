@@ -22,11 +22,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.FolderZip
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Key
+import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.Memory
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material3.Button
@@ -70,6 +72,7 @@ import org.koin.androidx.compose.koinViewModel
 fun SettingsScreen(
     onBackClick: (() -> Unit)? = null,
     onHistoryClick: () -> Unit = {},
+    onLanguageClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: SettingsScreenViewModel = koinViewModel(),
 ) {
@@ -273,7 +276,42 @@ fun SettingsScreen(
                 }
             }
 
-            // 2. Cấu hình Tối ưu hóa Anti-Split
+            // 2. Ngôn ngữ
+            item {
+                SettingsSection(
+                    title = stringResource(R.string.settings_section_language),
+                    icon = Icons.Rounded.Language,
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(onClick = onLanguageClick)
+                            .padding(Spacing.L),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.settings_language_title),
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = stringResource(state.appLanguage.labelRes),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+
+            // 3. Cấu hình Tối ưu hóa Anti-Split
             item {
                 SettingsSection(
                     title = stringResource(R.string.settings_section_engine),
