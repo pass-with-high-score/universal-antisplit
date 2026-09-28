@@ -29,9 +29,12 @@ fun MainNavigation() {
     val backStack = rememberNavBackStack(Main)
     val currentDestination = backStack.lastOrNull() ?: Main
 
+    val showBottomBar = currentDestination !is Language
+
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
+            if (showBottomBar) {
             NavigationBar(
                 containerColor = MaterialTheme.colorScheme.surfaceContainer,
             ) {
@@ -85,6 +88,7 @@ fun MainNavigation() {
                     },
                     label = { Text(stringResource(R.string.nav_settings)) }
                 )
+            }
             }
         }
     ) { paddingValues ->
