@@ -12,8 +12,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Layers
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -43,23 +45,41 @@ fun SplitComponentsCard(
         modifier = modifier,
     ) {
         Column(modifier = Modifier.padding(Spacing.L)) {
-            // Quick select chips
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(Spacing.S),
-                verticalAlignment = Alignment.CenterVertically
+            // Quick select segmented control
+            val isAllSelected = splitItems.isNotEmpty() && selectedSplitItems.size == splitItems.size
+            val isCoreOnly = selectedSplitItems.isNotEmpty() &&
+                    selectedSplitItems.all { it.startsWith("base.apk", ignoreCase = true) }
+
+            SingleChoiceSegmentedButtonRow(
+                modifier = Modifier.fillMaxWidth()
             ) {
-                FilterChip(
-                    selected = selectedSplitItems.size == splitItems.size,
+                SegmentedButton(
+                    selected = isAllSelected,
                     onClick = { onSelectAllSplits(true) },
-                    label = { Text(stringResource(R.string.chip_select_all, splitItems.size)) },
-                    shape = MaterialTheme.shapes.small
+                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                    icon = { SegmentedButtonDefaults.Icon(active = isAllSelected) },
+                    label = {
+                        Text(
+                            text = stringResource(R.string.chip_select_all, splitItems.size),
+                            style = MaterialTheme.typography.labelMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 )
-                FilterChip(
-                    selected = selectedSplitItems.size < splitItems.size,
+                SegmentedButton(
+                    selected = isCoreOnly,
                     onClick = { onSelectAllSplits(false) },
-                    label = { Text(stringResource(R.string.chip_core_only)) },
-                    shape = MaterialTheme.shapes.small
+                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                    icon = { SegmentedButtonDefaults.Icon(active = isCoreOnly) },
+                    label = {
+                        Text(
+                            text = stringResource(R.string.chip_core_only),
+                            style = MaterialTheme.typography.labelMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 )
             }
 
