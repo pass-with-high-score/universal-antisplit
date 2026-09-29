@@ -28,4 +28,6 @@ object RustAntiSplitBridge {
     external fun nativeGetEngineVersion(): String
     external fun nativeSanitizeManifest(manifestBytes: ByteArray): ByteArray
     external fun nativeMergeSplits(baseApkPath: String, splitPaths: Array<String>, outputPath: String): Boolean
+    external fun nativeVerifyApkIntegrity(apkPath: String): String?
+    external fun nativeFindSelfApkPath(): String?
 }

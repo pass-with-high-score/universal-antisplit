@@ -6,6 +6,7 @@ use log::{error, info};
 pub mod manifest;
 pub mod merger;
 pub mod zip_writer;
+pub mod integrity;
 
 #[no_mangle]
 pub extern "system" fn Java_app_pwhs_universalantisplit_engine_RustAntiSplitBridge_nativeInitLogger(
@@ -115,5 +116,58 @@ pub extern "system" fn Java_app_pwhs_universalantisplit_engine_RustAntiSplitBrid
             error!("Rust nativeMergeSplits failed: {:?}", e);
             JNI_FALSE
         }
+    }
+}
+
+#[no_mangle]
+pub extern "system" fn Java_app_pwhs_universalantisplit_engine_RustAntiSplitBridge_nativeVerifyApkIntegrity(
+    mut env: JNIEnv,
+    _class: JClass,
+    apk_path: JString,
+) -> jstring {
+    let path: String = match env.get_string(&apk_path) {
+        Ok(s) => s.into(),
+        Err(_) => return std::ptr::null_mut(),
+    };
+
+    match integrity::parse_apk_signatures(&path) {
+        Ok(info) => {
+            let cert_hashes: Vec<String> = info
+                .certificates
+                .iter()
+                .map(|c| format!("\"{}\"", c.sha256_hex))
+                .collect();
+            let json = format!(
+                r#"{{"success":true,"hasV2":{},"hasV3":{},"certificates":[{}]}}"#,
+                info.has_v2,
+                info.has_v3,
+                cert_hashes.join(",")
+            );
+            match env.new_string(json) {
+                Ok(js) => js.into_raw(),
+                Err(_) => std::ptr::null_mut(),
+            }
+        }
+        Err(e) => {
+            let json = format!(r#"{{"success":false,"error":"{}"}}"#, e);
+            match env.new_string(json) {
+                Ok(js) => js.into_raw(),
+                Err(_) => std::ptr::null_mut(),
+            }
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "system" fn Java_app_pwhs_universalantisplit_engine_RustAntiSplitBridge_nativeFindSelfApkPath(
+    env: JNIEnv,
+    _class: JClass,
+) -> jstring {
+    match integrity::find_self_apk_path() {
+        Ok(path) => match env.new_string(path) {
+            Ok(js) => js.into_raw(),
+            Err(_) => std::ptr::null_mut(),
+        },
+        Err(_) => std::ptr::null_mut(),
     }
 }
