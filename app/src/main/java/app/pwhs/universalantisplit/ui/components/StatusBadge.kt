@@ -49,7 +49,9 @@ fun StatusBadge(
                 text = text,
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.Bold,
-                color = contentColor
+                color = contentColor,
+                maxLines = 1,
+                softWrap = false,
             )
         }
     }
