@@ -11,7 +11,6 @@ const REPLACEMENTS: &[(&[u8], &[u8])] = &[
     ),
     (b"com.android.vending.splits", b"com.android.vending.merged"),
     (b"requiredSplitTypes", b"__req_SplitTypes__"),
-    (b"extractNativeLibs", b"__ext_NativeLibs_"),
     (b"configForSplit", b"__cfgForSplit_"),
     (b"isFeatureSplit", b"__isFeatSplit_"),
     (b"isolatedSplits", b"__isolated_spt"),

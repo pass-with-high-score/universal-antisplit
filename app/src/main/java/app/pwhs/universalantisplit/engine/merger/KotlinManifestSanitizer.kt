@@ -12,7 +12,6 @@ object KotlinManifestSanitizer {
         "com.android.vending.splits.required".toByteArray(StandardCharsets.US_ASCII) to "com.android.vending.splits.merged__".toByteArray(StandardCharsets.US_ASCII),
         "com.android.vending.splits".toByteArray(StandardCharsets.US_ASCII) to "com.android.vending.merged".toByteArray(StandardCharsets.US_ASCII),
         "requiredSplitTypes".toByteArray(StandardCharsets.US_ASCII) to "__req_SplitTypes__".toByteArray(StandardCharsets.US_ASCII),
-        "extractNativeLibs".toByteArray(StandardCharsets.US_ASCII) to "__ext_NativeLibs_".toByteArray(StandardCharsets.US_ASCII),
         "configForSplit".toByteArray(StandardCharsets.US_ASCII) to "__cfgForSplit_".toByteArray(StandardCharsets.US_ASCII),
         "isFeatureSplit".toByteArray(StandardCharsets.US_ASCII) to "__isFeatSplit_".toByteArray(StandardCharsets.US_ASCII),
         "isolatedSplits".toByteArray(StandardCharsets.US_ASCII) to "__isolated_spt".toByteArray(StandardCharsets.US_ASCII),

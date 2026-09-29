@@ -121,4 +121,7 @@ dependencies {
 
   // WorkManager
   implementation(libs.androidx.work.runtime.ktx)
+
+  // ARSCLib for resources.arsc merging
+  implementation(libs.arsclib)
 }

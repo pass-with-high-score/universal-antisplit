@@ -93,6 +93,7 @@ class ApkMerger(
                     var currentDexIndex = baseResult.maxDex
 
                     // Step 2: Merge each split APK
+                    val splitArscList = mutableListOf<ByteArray>()
                     onProgress(0.5f, R.string.status_merging_resources, 0)
                     for ((index, splitFile) in splitFiles.withIndex()) {
                         if (!splitFile.exists() || splitFile.length() == 0L) continue
@@ -104,7 +105,25 @@ class ApkMerger(
                             writer = writer,
                             existingEntries = existingEntryNames,
                             currentDexIndex = currentDexIndex,
+                            splitArscList = splitArscList,
                         )
+                    }
+
+                    // Step 2.1: Write merged resources.arsc table
+                    if (baseResult.baseArscBytes != null) {
+                        onProgress(0.81f, R.string.status_merging_resources, 0)
+                        val finalArscBytes = if (splitArscList.isNotEmpty()) {
+                            runCatching {
+                                ArscMerger.merge(baseResult.baseArscBytes, splitArscList)
+                            }.getOrElse { error ->
+                                Timber.e(error, "Failed to merge resources.arsc, falling back to base")
+                                baseResult.baseArscBytes
+                            }
+                        } else {
+                            baseResult.baseArscBytes
+                        }
+                        writer.writeEntry("resources.arsc", finalArscBytes, ZipEntry.STORED)
+                        existingEntryNames.add("resources.arsc")
                     }
 
                     // Step 2.5: Inject PMS Hook if enabled
@@ -154,6 +173,7 @@ class ApkMerger(
     private data class BaseProcessResult(
         val maxDex: Int,
         val originalApplicationClass: String?,
+        val baseArscBytes: ByteArray?,
     )
 
     private fun processBaseApk(
@@ -164,6 +184,7 @@ class ApkMerger(
     ): BaseProcessResult {
         var maxDex = 0
         var originalAppClass: String? = null
+        var baseArscBytes: ByteArray? = null
         ZipFile(baseApkFile).use { zip ->
             val entries = zip.entries()
             while (entries.hasMoreElements()) {
@@ -172,6 +193,11 @@ class ApkMerger(
 
                 if (isSignatureFile(name)) {
                     continue // Strip obsolete signatures
+                }
+
+                if (name == "resources.arsc") {
+                    baseArscBytes = zip.getInputStream(entry).use { it.readBytes() }
+                    continue
                 }
 
                 if (name == "AndroidManifest.xml") {
@@ -212,6 +238,7 @@ class ApkMerger(
         return BaseProcessResult(
             maxDex = maxDex.coerceAtLeast(1),
             originalApplicationClass = originalAppClass,
+            baseArscBytes = baseArscBytes,
         )
     }
 
@@ -220,6 +247,7 @@ class ApkMerger(
         writer: ApkZipWriter,
         existingEntries: MutableSet<String>,
         currentDexIndex: Int,
+        splitArscList: MutableList<ByteArray>,
     ): Int {
         var nextDex = currentDexIndex
         ZipFile(splitFile).use { zip ->
@@ -228,8 +256,15 @@ class ApkMerger(
                 val entry = entries.nextElement()
                 val name = entry.name
 
-                // Ignore signatures, manifest and duplicate resources.arsc from splits
-                if (isSignatureFile(name) || name == "AndroidManifest.xml" || name == "resources.arsc") {
+                // Ignore signatures and manifest from splits
+                if (isSignatureFile(name) || name == "AndroidManifest.xml") {
+                    continue
+                }
+
+                // Collect split resources.arsc table
+                if (name == "resources.arsc") {
+                    val splitArsc = zip.getInputStream(entry).use { it.readBytes() }
+                    splitArscList.add(splitArsc)
                     continue
                 }
 

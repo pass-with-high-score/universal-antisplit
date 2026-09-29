@@ -7,6 +7,7 @@ pub mod manifest;
 pub mod merger;
 pub mod zip_writer;
 pub mod integrity;
+pub mod arsc;
 
 #[no_mangle]
 pub extern "system" fn Java_app_pwhs_universalantisplit_engine_RustAntiSplitBridge_nativeInitLogger(

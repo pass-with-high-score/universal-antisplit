@@ -42,6 +42,8 @@ pub fn merge_apks<P: AsRef<Path>, S: AsRef<Path>>(
 
     let mut existing_entries = HashSet::new();
     let mut max_dex = 1;
+    let mut base_arsc_data: Option<Vec<u8>> = None;
+    let mut split_arsc_list: Vec<Vec<u8>> = Vec::new();
 
     // Step 1: Process base.apk
     for i in 0..base_zip.len() {
@@ -63,6 +65,11 @@ pub fn merge_apks<P: AsRef<Path>, S: AsRef<Path>>(
             continue;
         }
 
+        if name == "resources.arsc" {
+            base_arsc_data = Some(data);
+            continue;
+        }
+
         if let Some(dex_num) = parse_dex_index(&name) {
             if dex_num > max_dex {
                 max_dex = dex_num;
@@ -70,11 +77,7 @@ pub fn merge_apks<P: AsRef<Path>, S: AsRef<Path>>(
         }
 
         let crc = entry.crc32();
-        if name.ends_with(".so") || name == "resources.arsc" {
-            writer.write_stored_entry(&name, &data, crc)?;
-        } else {
-            writer.write_stored_entry(&name, &data, crc)?;
-        }
+        writer.write_stored_entry(&name, &data, crc)?;
         existing_entries.insert(name);
     }
 
@@ -101,12 +104,17 @@ pub fn merge_apks<P: AsRef<Path>, S: AsRef<Path>>(
             };
             let name = entry.name().to_string();
 
-            if is_signature_file(&name) || name == "AndroidManifest.xml" || name == "resources.arsc" {
+            if is_signature_file(&name) || name == "AndroidManifest.xml" {
                 continue;
             }
 
             let mut data = Vec::with_capacity(entry.size() as usize);
             if entry.read_to_end(&mut data).is_err() {
+                continue;
+            }
+
+            if name == "resources.arsc" {
+                split_arsc_list.push(data);
                 continue;
             }
 
@@ -125,6 +133,21 @@ pub fn merge_apks<P: AsRef<Path>, S: AsRef<Path>>(
                 existing_entries.insert(name);
             }
         }
+    }
+
+    // Step 3: Merge and write resources.arsc
+    if let Some(base_arsc) = base_arsc_data {
+        let final_arsc = if !split_arsc_list.is_empty() {
+            crate::arsc::merge_arsc(&base_arsc, &split_arsc_list).unwrap_or_else(|e| {
+                log::warn!("Rust ARSC merge error: {e}, falling back to base ARSC");
+                base_arsc
+            })
+        } else {
+            base_arsc
+        };
+        let crc = crc32fast::hash(&final_arsc);
+        writer.write_stored_entry("resources.arsc", &final_arsc, crc)?;
+        existing_entries.insert("resources.arsc".to_string());
     }
 
     writer.finish()?;
