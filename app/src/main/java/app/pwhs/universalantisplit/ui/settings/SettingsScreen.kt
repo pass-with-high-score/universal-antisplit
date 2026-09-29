@@ -118,162 +118,16 @@ fun SettingsScreen(
 
             // 1. Giao diện & Chủ đề
             item {
-                SettingsSection(
-                    title = stringResource(R.string.settings_section_appearance),
-                    icon = Icons.Rounded.Palette,
-                    collapsible = true,
-                    defaultExpanded = true,
-                ) {
-                    Column(modifier = Modifier.padding(Spacing.L)) {
-                        Text(
-                            text = stringResource(R.string.settings_theme_mode_title),
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Spacer(Modifier.height(Spacing.S))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(Spacing.S)
-                        ) {
-                            ThemeMode.entries.forEach { mode ->
-                                val selected = state.themeMode == mode
-                                val labelRes = when (mode) {
-                                    ThemeMode.System -> R.string.settings_theme_system
-                                    ThemeMode.Light -> R.string.settings_theme_light
-                                    ThemeMode.Dark -> R.string.settings_theme_dark
-                                }
-                                FilterChip(
-                                    selected = selected,
-                                    onClick = { viewModel.setThemeMode(mode) },
-                                    label = { Text(stringResource(labelRes)) },
-                                    modifier = Modifier.weight(1f),
-                                    shape = MaterialTheme.shapes.medium,
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
-                                    )
-                                )
-                            }
-                        }
-
-                        Spacer(Modifier.height(Spacing.L))
-
-                        // AMOLED Switch
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = stringResource(R.string.settings_amoled_title),
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                                Text(
-                                    text = stringResource(R.string.settings_amoled_desc),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            Switch(
-                                checked = state.amoledMode,
-                                onCheckedChange = { viewModel.setAmoledMode(it) }
-                            )
-                        }
-
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                            Spacer(Modifier.height(Spacing.L))
-
-                            // Dynamic Color Switch
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = stringResource(R.string.settings_dynamic_color_title),
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.settings_dynamic_color_desc),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                                Switch(
-                                    checked = state.dynamicColor,
-                                    onCheckedChange = { viewModel.setDynamicColor(it) }
-                                )
-                            }
-                        }
-
-                        Spacer(Modifier.height(Spacing.L))
-
-                        // Color Presets
-                        Text(
-                            text = stringResource(R.string.settings_preset_color_title),
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Spacer(Modifier.height(Spacing.S))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            AppThemePreset.entries.forEach { preset ->
-                                val color = when (preset) {
-                                    AppThemePreset.Orange -> Color(0xFFEA580C)
-                                    AppThemePreset.Blue -> Color(0xFF0284C7)
-                                    AppThemePreset.Green -> Color(0xFF16A34A)
-                                    AppThemePreset.Red -> Color(0xFFDC2626)
-                                    AppThemePreset.Purple -> Color(0xFF9333EA)
-                                }
-                                val isSelected = state.themePreset == preset && !state.dynamicColor
-
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    modifier = Modifier
-                                        .clip(MaterialTheme.shapes.medium)
-                                        .clickable { viewModel.setThemePreset(preset) }
-                                        .padding(4.dp)
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(44.dp)
-                                            .clip(CircleShape)
-                                            .background(color)
-                                            .then(
-                                                if (isSelected) Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
-                                                else Modifier
-                                            ),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        if (isSelected) {
-                                            Icon(
-                                                imageVector = Icons.Rounded.Check,
-                                                contentDescription = null,
-                                                tint = Color.White,
-                                                modifier = Modifier.size(20.dp)
-                                            )
-                                        }
-                                    }
-                                    Spacer(Modifier.height(4.dp))
-                                    Text(
-                                        text = preset.label,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
+                app.pwhs.universalantisplit.ui.settings.components.AppearanceSettingsSection(
+                    themeMode = state.themeMode,
+                    dynamicColor = state.dynamicColor,
+                    amoledMode = state.amoledMode,
+                    themePreset = state.themePreset,
+                    onThemeModeChange = { viewModel.setThemeMode(it) },
+                    onAmoledModeChange = { viewModel.setAmoledMode(it) },
+                    onDynamicColorChange = { viewModel.setDynamicColor(it) },
+                    onThemePresetChange = { viewModel.setThemePreset(it) },
+                )
             }
 
             // 2. Ngôn ngữ
@@ -410,6 +264,31 @@ fun SettingsScreen(
                             Switch(
                                 checked = state.autoSign,
                                 onCheckedChange = { viewModel.setAutoSign(it) }
+                            )
+                        }
+
+                        Spacer(Modifier.height(Spacing.L))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(R.string.settings_bypass_signature_title),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(
+                                    text = stringResource(R.string.settings_bypass_signature_desc),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Switch(
+                                checked = state.bypassSignature,
+                                onCheckedChange = { viewModel.setBypassSignature(it) }
                             )
                         }
 

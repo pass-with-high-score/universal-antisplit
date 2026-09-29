@@ -14,8 +14,13 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
 
+import app.pwhs.universalantisplit.engine.hook.ManifestHookPatcher
+import app.pwhs.universalantisplit.engine.hook.PmsHookInjector
+import app.pwhs.universalantisplit.engine.hook.SignatureExtractor
+
 data class MergeOptions(
     val autoSign: Boolean = true,
+    val bypassSignature: Boolean = false,
 )
 
 /**
@@ -47,31 +52,72 @@ class ApkMerger(
             Timber.i("Beginning merge of base=${baseApkFile.name} with ${splitFiles.size} splits")
 
             val existingEntryNames = mutableSetOf<String>()
-            var highestDexIndex = 1
+            val originalSignatures = if (options.bypassSignature) {
+                SignatureExtractor.extractCertificates(baseApkFile)
+            } else {
+                emptyList()
+            }
 
-            ZipOutputStream(BufferedOutputStream(FileOutputStream(tempUnsignedApk))).use { zos ->
-                // Step 1: Process base.apk
-                onProgress(0.3f, R.string.status_cleaning_manifest, 0)
-                highestDexIndex = processBaseApk(
-                    baseApkFile = baseApkFile,
-                    zos = zos,
-                    existingEntries = existingEntryNames,
-                )
-
-                // Step 2: Merge each split APK
-                onProgress(0.5f, R.string.status_merging_resources, 0)
-                var currentDexIndex = highestDexIndex
-                for ((index, splitFile) in splitFiles.withIndex()) {
-                    if (!splitFile.exists() || splitFile.length() == 0L) continue
-                    val progressRatio = 0.5f + (0.3f * (index + 1) / splitFiles.size.coerceAtLeast(1))
-                    onProgress(progressRatio, R.string.status_merging_resources, index + 1)
-
-                    currentDexIndex = mergeSplitApk(
-                        splitFile = splitFile,
-                        zos = zos,
-                        existingEntries = existingEntryNames,
-                        currentDexIndex = currentDexIndex,
+            var mergedViaRust = false
+            if (RustAntiSplitBridge.isNativeEngineAvailable() && !options.bypassSignature) {
+                onProgress(0.3f, R.string.status_merging_resources, 0)
+                val splitPaths = splitFiles.filter { it.exists() && it.length() > 0 }
+                    .map { it.absolutePath }
+                    .toTypedArray()
+                val rustOk = runCatching {
+                    RustAntiSplitBridge.nativeMergeSplits(
+                        baseApkFile.absolutePath,
+                        splitPaths,
+                        tempUnsignedApk.absolutePath,
                     )
+                }.getOrDefault(false)
+
+                if (rustOk && tempUnsignedApk.exists() && tempUnsignedApk.length() > 0) {
+                    Timber.i("Splits merged via Rust Native Engine successfully: ${tempUnsignedApk.length()} bytes")
+                    mergedViaRust = true
+                } else {
+                    Timber.w("Rust native merge failed or incomplete, falling back to Kotlin engine")
+                }
+            }
+
+            if (!mergedViaRust) {
+                ApkZipWriter(BufferedOutputStream(FileOutputStream(tempUnsignedApk)), align16Kb = true).use { writer ->
+                    // Step 1: Process base.apk
+                    onProgress(0.3f, R.string.status_cleaning_manifest, 0)
+                    val baseResult = processBaseApk(
+                        baseApkFile = baseApkFile,
+                        writer = writer,
+                        existingEntries = existingEntryNames,
+                        bypassSignature = options.bypassSignature,
+                    )
+                    var currentDexIndex = baseResult.maxDex
+
+                    // Step 2: Merge each split APK
+                    onProgress(0.5f, R.string.status_merging_resources, 0)
+                    for ((index, splitFile) in splitFiles.withIndex()) {
+                        if (!splitFile.exists() || splitFile.length() == 0L) continue
+                        val progressRatio = 0.5f + (0.3f * (index + 1) / splitFiles.size.coerceAtLeast(1))
+                        onProgress(progressRatio, R.string.status_merging_resources, index + 1)
+
+                        currentDexIndex = mergeSplitApk(
+                            splitFile = splitFile,
+                            writer = writer,
+                            existingEntries = existingEntryNames,
+                            currentDexIndex = currentDexIndex,
+                        )
+                    }
+
+                    // Step 2.5: Inject PMS Hook if enabled
+                    if (options.bypassSignature && originalSignatures.isNotEmpty()) {
+                        onProgress(0.82f, R.string.status_injecting_pms_hook, 0)
+                        currentDexIndex = PmsHookInjector(context).injectHook(
+                            writer = writer,
+                            nextDexIndex = currentDexIndex + 1,
+                            originalSignatures = originalSignatures,
+                            originalApplicationClass = baseResult.originalApplicationClass,
+                            existingEntries = existingEntryNames,
+                        )
+                    }
                 }
             }
 
@@ -105,12 +151,19 @@ class ApkMerger(
         }
     }
 
+    private data class BaseProcessResult(
+        val maxDex: Int,
+        val originalApplicationClass: String?,
+    )
+
     private fun processBaseApk(
         baseApkFile: File,
-        zos: ZipOutputStream,
+        writer: ApkZipWriter,
         existingEntries: MutableSet<String>,
-    ): Int {
+        bypassSignature: Boolean = false,
+    ): BaseProcessResult {
         var maxDex = 0
+        var originalAppClass: String? = null
         ZipFile(baseApkFile).use { zip ->
             val entries = zip.entries()
             while (entries.hasMoreElements()) {
@@ -123,8 +176,20 @@ class ApkMerger(
 
                 if (name == "AndroidManifest.xml") {
                     val rawBytes = zip.getInputStream(entry).use { it.readBytes() }
-                    val sanitizedBytes = sanitizeManifest(rawBytes)
-                    writeZipEntry(zos, name, sanitizedBytes)
+                    var sanitizedBytes = sanitizeManifest(rawBytes)
+                    if (bypassSignature) {
+                        val patchResult = runCatching {
+                            ManifestHookPatcher.patch(sanitizedBytes)
+                        }.getOrNull()
+                        if (patchResult != null) {
+                            sanitizedBytes = patchResult.patchedManifestBytes
+                            originalAppClass = patchResult.originalApplicationClass
+                            Timber.i("Manifest patched for PMS Hook: originalApp=$originalAppClass")
+                        } else {
+                            Timber.w("Failed to patch Manifest for PMS Hook, proceeding with sanitized manifest")
+                        }
+                    }
+                    writer.writeEntry(name, sanitizedBytes)
                     existingEntries.add(name)
                     continue
                 }
@@ -136,30 +201,23 @@ class ApkMerger(
                     if (dexNum > maxDex) maxDex = dexNum
 
                     existingEntries.add(name)
-                    zip.getInputStream(entry).use { input ->
-                        val newEntry = ZipEntry(name)
-                        zos.putNextEntry(newEntry)
-                        input.copyTo(zos)
-                        zos.closeEntry()
-                    }
+                    writer.copyEntry(zip, entry, name)
                     continue
                 }
 
                 existingEntries.add(name)
-                zip.getInputStream(entry).use { input ->
-                    val newEntry = ZipEntry(name)
-                    zos.putNextEntry(newEntry)
-                    input.copyTo(zos)
-                    zos.closeEntry()
-                }
+                writer.copyEntry(zip, entry, name)
             }
         }
-        return maxDex.coerceAtLeast(1)
+        return BaseProcessResult(
+            maxDex = maxDex.coerceAtLeast(1),
+            originalApplicationClass = originalAppClass,
+        )
     }
 
     private fun mergeSplitApk(
         splitFile: File,
-        zos: ZipOutputStream,
+        writer: ApkZipWriter,
         existingEntries: MutableSet<String>,
         currentDexIndex: Int,
     ): Int {
@@ -180,24 +238,14 @@ class ApkMerger(
                     nextDex++
                     val renumberedName = "classes$nextDex.dex"
                     existingEntries.add(renumberedName)
-                    zip.getInputStream(entry).use { input ->
-                        val newEntry = ZipEntry(renumberedName)
-                        zos.putNextEntry(newEntry)
-                        input.copyTo(zos)
-                        zos.closeEntry()
-                    }
+                    writer.copyEntry(zip, entry, renumberedName)
                     continue
                 }
 
                 // For all other files (lib/*.so, assets/*, res/*)
                 if (name !in existingEntries) {
                     existingEntries.add(name)
-                    zip.getInputStream(entry).use { input ->
-                        val newEntry = ZipEntry(name)
-                        zos.putNextEntry(newEntry)
-                        input.copyTo(zos)
-                        zos.closeEntry()
-                    }
+                    writer.copyEntry(zip, entry, name)
                 }
             }
         }
@@ -226,12 +274,6 @@ class ApkMerger(
         return KotlinManifestSanitizer.sanitize(processed)
     }
 
-    private fun writeZipEntry(zos: ZipOutputStream, entryName: String, data: ByteArray) {
-        val entry = ZipEntry(entryName)
-        zos.putNextEntry(entry)
-        zos.write(data)
-        zos.closeEntry()
-    }
 
     private fun isSignatureFile(name: String): Boolean {
         if (!name.startsWith("META-INF/")) return false

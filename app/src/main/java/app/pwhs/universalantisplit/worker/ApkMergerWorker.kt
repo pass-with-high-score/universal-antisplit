@@ -41,6 +41,7 @@ class ApkMergerWorker(
         const val KEY_EXTERNAL_SOURCE_URI = "external_source_uri"
         const val KEY_SELECTED_SPLIT_NAMES = "selected_split_names"
         const val KEY_AUTO_SIGN = "auto_sign"
+        const val KEY_BYPASS_SIGNATURE = "bypass_signature"
         const val KEY_APP_NAME = "app_name"
         const val KEY_PACKAGE_NAME = "package_name"
         const val KEY_VERSION_NAME = "version_name"
@@ -61,6 +62,7 @@ class ApkMergerWorker(
         val externalSourceUri = externalSourceUriString?.toUri()
         val selectedSplitNames = inputData.getStringArray(KEY_SELECTED_SPLIT_NAMES)?.toSet() ?: emptySet()
         val autoSign = inputData.getBoolean(KEY_AUTO_SIGN, true)
+        val bypassSignature = inputData.getBoolean(KEY_BYPASS_SIGNATURE, false)
         val appName = inputData.getString(KEY_APP_NAME) ?: applicationContext.getString(R.string.app_name)
         val packageName = inputData.getString(KEY_PACKAGE_NAME)
         val versionName = inputData.getString(KEY_VERSION_NAME)
@@ -92,7 +94,7 @@ class ApkMergerWorker(
                 baseApkFile = extracted.baseApk,
                 splitFiles = extracted.splitApks,
                 outputApkFile = tempMergedFile,
-                options = MergeOptions(autoSign = autoSign),
+                options = MergeOptions(autoSign = autoSign, bypassSignature = bypassSignature),
                 onProgress = { progress, statusResId, count ->
                     val text = if (count > 0) applicationContext.getString(statusResId, count) else applicationContext.getString(statusResId)
                     val progressPercent = (progress * 100).toInt()

@@ -313,6 +313,31 @@ fun MainScreen(
                                 onCheckedChange = { viewModel.onToggleAutoSign(it) }
                             )
                         }
+
+                        Spacer(Modifier.height(Spacing.L))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(R.string.settings_bypass_signature_title),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(
+                                    text = stringResource(R.string.settings_bypass_signature_desc),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Switch(
+                                checked = state.bypassSignature,
+                                onCheckedChange = { viewModel.onToggleBypassSignature(it) }
+                            )
+                        }
                     }
                 }
             }

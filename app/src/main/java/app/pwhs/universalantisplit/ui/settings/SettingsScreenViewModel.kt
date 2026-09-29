@@ -24,6 +24,7 @@ data class SettingsUiState(
     val amoledMode: Boolean = false,
     val themePreset: AppThemePreset = AppThemePreset.Orange,
     val autoSign: Boolean = true,
+    val bypassSignature: Boolean = false,
     val align16Kb: Boolean = true,
     val cleanCache: Boolean = true,
     val outputDir: String = "/sdcard/Download/UniversalAntiSplit",
@@ -51,6 +52,7 @@ class SettingsScreenViewModel(
                 val presetName = prefs[PreferenceKeys.THEME_PRESET] ?: AppThemePreset.Orange.name
                 val themePreset = AppThemePreset.entries.find { it.name == presetName } ?: AppThemePreset.Orange
                 val autoSign = prefs[PreferenceKeys.AUTO_SIGN] ?: true
+                val bypassSignature = prefs[PreferenceKeys.BYPASS_SIGNATURE] ?: false
                 val align16Kb = prefs[PreferenceKeys.ALIGN_16KB] ?: true
                 val cleanCache = prefs[PreferenceKeys.CLEAN_CACHE] ?: true
                 val outputDir = prefs[PreferenceKeys.OUTPUT_DIR] ?: "/sdcard/Download/UniversalAntiSplit"
@@ -63,6 +65,7 @@ class SettingsScreenViewModel(
                         amoledMode = amoledMode,
                         themePreset = themePreset,
                         autoSign = autoSign,
+                        bypassSignature = bypassSignature,
                         align16Kb = align16Kb,
                         cleanCache = cleanCache,
                         outputDir = outputDir,
@@ -137,6 +140,14 @@ class SettingsScreenViewModel(
         viewModelScope.launch {
             context.dataStore.edit { prefs ->
                 prefs[PreferenceKeys.AUTO_SIGN] = enabled
+            }
+        }
+    }
+
+    fun setBypassSignature(enabled: Boolean) {
+        viewModelScope.launch {
+            context.dataStore.edit { prefs ->
+                prefs[PreferenceKeys.BYPASS_SIGNATURE] = enabled
             }
         }
     }

@@ -23,3 +23,6 @@ fastlane/test_output/
 *.p12
 .keystore_credentials.tmp
 Gemfile.lock
+CLAUDE.local.md
+.claude/settings.local.json
+scratch/

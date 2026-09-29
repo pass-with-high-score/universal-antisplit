@@ -54,6 +54,13 @@ class ApkMergerIntegrationTest {
             zos.write(manifestContent)
             zos.closeEntry()
 
+            // resources.arsc (originally deflated, must be converted to STORED and aligned)
+            val arscContent = "ARSC_HEADER_RESOURCES_TABLE_DUMMY_DATA_12345678".toByteArray()
+            val arscEntry = ZipEntry("resources.arsc")
+            zos.putNextEntry(arscEntry)
+            zos.write(arscContent)
+            zos.closeEntry()
+
             // classes.dex
             val dexContent = "DEX_BASE_035".toByteArray(StandardCharsets.US_ASCII)
             zos.putNextEntry(ZipEntry("classes.dex"))
@@ -119,9 +126,15 @@ class ApkMergerIntegrationTest {
             val dex2Content = String(zip.getInputStream(dex2).use { it.readBytes() }, StandardCharsets.US_ASCII)
             assertEquals("DEX_SPLIT_035", dex2Content)
 
-            // Native lib from split must exist
+            // resources.arsc must exist and MUST BE STORED (uncompressed) for Android R+
+            val arscEntry = zip.getEntry("resources.arsc")
+            assertNotNull("resources.arsc missing", arscEntry)
+            assertEquals("resources.arsc MUST be STORED (method=0)", ZipEntry.STORED, arscEntry.method)
+
+            // Native lib from split must exist and MUST BE STORED for Android 15 page alignment
             val nativeEntry = zip.getEntry("lib/arm64-v8a/libnative.so")
             assertNotNull("lib/arm64-v8a/libnative.so missing", nativeEntry)
+            assertEquals("Native .so file MUST be STORED (method=0)", ZipEntry.STORED, nativeEntry.method)
         }
 
         // 5. Verify cryptographic signatures using Google ApkVerifier (checking against minSdk 21)

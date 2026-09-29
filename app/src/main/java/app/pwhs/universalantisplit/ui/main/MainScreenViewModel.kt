@@ -35,6 +35,9 @@ import androidx.work.workDataOf
 import app.pwhs.universalantisplit.worker.ApkMergerWorker
 import java.io.File
 
+import app.pwhs.universalantisplit.data.local.PreferenceKeys
+import app.pwhs.universalantisplit.data.local.dataStore
+
 data class MainUiState(
     val selectedAppName: String? = null,
     val selectedPackageName: String? = null,
@@ -45,6 +48,7 @@ data class MainUiState(
     val selectedSplitItems: Set<String> = emptySet(),
     val isPairIpDetected: Boolean = false,
     val autoSignMergedApk: Boolean = true,
+    val bypassSignature: Boolean = false,
     val isMerging: Boolean = false,
     val mergeProgress: Float = 0f,
     val mergeStatusText: String = "",
@@ -85,6 +89,17 @@ class MainScreenViewModel(
     init {
         loadInstalledApps()
         observeMergeWorker()
+        observeSettings()
+    }
+
+    private fun observeSettings() {
+        viewModelScope.launch {
+            context.dataStore.data.collect { prefs ->
+                val autoSign = prefs[PreferenceKeys.AUTO_SIGN] ?: true
+                val bypassSig = prefs[PreferenceKeys.BYPASS_SIGNATURE] ?: false
+                _uiState.update { it.copy(autoSignMergedApk = autoSign, bypassSignature = bypassSig) }
+            }
+        }
     }
 
     fun loadInstalledApps() {
@@ -151,6 +166,7 @@ class MainScreenViewModel(
                         splitItems = info.splitNames,
                         selectedSplitItems = info.splitNames.toSet(),
                         isPairIpDetected = info.isPairIpDetected,
+                        bypassSignature = if (info.isPairIpDetected) true else it.bypassSignature,
                         isInstalledApp = false,
                         iconBitmap = info.iconBitmap,
                         isMerging = false,
@@ -190,6 +206,10 @@ class MainScreenViewModel(
 
     fun onToggleAutoSign(autoSign: Boolean) {
         _uiState.update { it.copy(autoSignMergedApk = autoSign) }
+    }
+
+    fun onToggleBypassSignature(bypass: Boolean) {
+        _uiState.update { it.copy(bypassSignature = bypass) }
     }
 
     private fun observeMergeWorker() {
@@ -308,6 +328,7 @@ class MainScreenViewModel(
             ApkMergerWorker.KEY_EXTERNAL_SOURCE_URI to currentExternalPackage?.sourceUri?.toString(),
             ApkMergerWorker.KEY_SELECTED_SPLIT_NAMES to toMerge.toTypedArray(),
             ApkMergerWorker.KEY_AUTO_SIGN to state.autoSignMergedApk,
+            ApkMergerWorker.KEY_BYPASS_SIGNATURE to state.bypassSignature,
             ApkMergerWorker.KEY_APP_NAME to appName,
             ApkMergerWorker.KEY_PACKAGE_NAME to state.selectedPackageName,
             ApkMergerWorker.KEY_VERSION_NAME to state.selectedVersionName
@@ -428,6 +449,7 @@ class MainScreenViewModel(
             MainUiState(
                 installedApps = it.installedApps,
                 autoSignMergedApk = it.autoSignMergedApk,
+                bypassSignature = it.bypassSignature,
             )
         }
     }

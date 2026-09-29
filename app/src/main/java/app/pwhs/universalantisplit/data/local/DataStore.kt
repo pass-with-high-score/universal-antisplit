@@ -15,6 +15,7 @@ object PreferenceKeys {
     val AMOLED_MODE = booleanPreferencesKey("amoled_mode")
     val THEME_PRESET = stringPreferencesKey("theme_preset")
     val AUTO_SIGN = booleanPreferencesKey("auto_sign")
+    val BYPASS_SIGNATURE = booleanPreferencesKey("bypass_signature")
     val ALIGN_16KB = booleanPreferencesKey("align_16kb")
     val CLEAN_CACHE = booleanPreferencesKey("clean_cache")
     val OUTPUT_DIR = stringPreferencesKey("output_dir")

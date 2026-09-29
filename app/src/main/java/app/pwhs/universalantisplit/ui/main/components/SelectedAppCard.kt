@@ -272,7 +272,7 @@ fun SelectedAppCard(
                         )
                         Spacer(Modifier.width(Spacing.S))
                         Text(
-                            text = stringResource(R.string.warning_pairip),
+                            text = stringResource(R.string.warning_pairip_recommend_bypass),
                             style = MaterialTheme.typography.bodySmall,
                             color = extendedColors.onWarning,
                         )

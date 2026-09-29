@@ -1,9 +1,11 @@
 use jni::objects::{JByteArray, JClass, JObjectArray, JString};
-use jni::sys::{jboolean, jbyteArray, jstring, JNI_TRUE};
+use jni::sys::{jboolean, jbyteArray, jstring, JNI_FALSE, JNI_TRUE};
 use jni::JNIEnv;
-use log::info;
+use log::{error, info};
 
 pub mod manifest;
+pub mod merger;
+pub mod zip_writer;
 
 #[no_mangle]
 pub extern "system" fn Java_app_pwhs_universalantisplit_engine_RustAntiSplitBridge_nativeInitLogger(
@@ -26,7 +28,7 @@ pub extern "system" fn Java_app_pwhs_universalantisplit_engine_RustAntiSplitBrid
     env: JNIEnv,
     _class: JClass,
 ) -> jstring {
-    let version = "Rust Native NDK Core v0.1.0 (Zero-Copy Engine)";
+    let version = "Rust Native NDK Core v0.2.0 (High-Performance Zero-Copy Engine)";
     let output = env
         .new_string(version)
         .expect("Couldn't create java string!");
@@ -61,24 +63,33 @@ pub extern "system" fn Java_app_pwhs_universalantisplit_engine_RustAntiSplitBrid
 ) -> jboolean {
     let base_path: String = match env.get_string(&base_apk_path) {
         Ok(s) => s.into(),
-        Err(_) => return 0,
+        Err(e) => {
+            error!("Failed to get base_apk_path: {:?}", e);
+            return JNI_FALSE;
+        }
     };
 
     let out_path: String = match env.get_string(&output_path) {
         Ok(s) => s.into(),
-        Err(_) => return 0,
+        Err(e) => {
+            error!("Failed to get output_path: {:?}", e);
+            return JNI_FALSE;
+        }
     };
 
     let len = match env.get_array_length(&split_paths) {
         Ok(l) => l,
-        Err(_) => return 0,
+        Err(e) => {
+            error!("Failed to get split_paths length: {:?}", e);
+            return JNI_FALSE;
+        }
     };
 
     let mut splits = Vec::new();
     for i in 0..len {
         let obj = match env.get_object_array_element(&split_paths, i) {
             Ok(o) => o,
-            Err(_) => return 0,
+            Err(_) => return JNI_FALSE,
         };
         let jstr = JString::from(obj);
         if let Ok(java_str) = env.get_string(&jstr) {
@@ -88,11 +99,21 @@ pub extern "system" fn Java_app_pwhs_universalantisplit_engine_RustAntiSplitBrid
     }
 
     info!(
-        "Merging splits: base={}, count={}, out={}",
+        "Rust nativeMergeSplits starting: base={}, splits={}, output={}",
         base_path,
         splits.len(),
         out_path
     );
 
-    JNI_TRUE
+    let options = merger::MergeOptions::default();
+    match merger::merge_apks(&base_path, &splits, &out_path, &options) {
+        Ok(_) => {
+            info!("Rust nativeMergeSplits completed successfully");
+            JNI_TRUE
+        }
+        Err(e) => {
+            error!("Rust nativeMergeSplits failed: {:?}", e);
+            JNI_FALSE
+        }
+    }
 }

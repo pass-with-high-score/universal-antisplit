@@ -31,6 +31,11 @@
     <string name="badge_single_apk">Single APK</string>
     <string name="badge_splits_count">%1$d Splits</string>
     <string name="warning_pairip">Google PairIP / Play Integrity detected. The merged APK may need additional bypassing to run standalone.</string>
+    <string name="warning_pairip_recommend_bypass">Google PairIP / Play Integrity detected. Enable \"Kill Signature\" to allow standalone execution without crashing.</string>
+    <string name="action_enable_bypass_sig">Enable Kill Signature</string>
+    <string name="status_injecting_pms_hook">Injecting PMS Signature Hook...</string>
+    <string name="settings_bypass_signature_title">Kill Signature (Signature Bypass)</string>
+    <string name="settings_bypass_signature_desc">Injects a PMS Hook to emulate the original certificate, bypassing Java integrity checks and Google PairIP</string>
     <string name="section_components_title">APK Components list (%1$d/%2$d)</string>
     <string name="chip_select_all">Select all (%1$d)</string>
     <string name="chip_core_only">Core only (base.apk)</string>

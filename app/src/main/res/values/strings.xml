@@ -37,6 +37,9 @@
     <string name="badge_single_apk">Single APK</string>
     <string name="badge_splits_count">%1$d Splits</string>
     <string name="warning_pairip">Phát hiện Google PairIP / Play Integrity. APK sau khi gộp có thể cần bypass bổ sung để chạy độc lập.</string>
+    <string name="warning_pairip_recommend_bypass">Phát hiện Google PairIP / Play Integrity. Bạn nên bật \"Kill Signature\" để ứng dụng chạy độc lập không bị crash.</string>
+    <string name="action_enable_bypass_sig">Bật Kill Signature</string>
+    <string name="status_injecting_pms_hook">Đang tiêm PMS Signature Hook...</string>
 
     <!-- Split Components Section -->
     <string name="section_components_title">Danh sách APK Components (%1$d/%2$d)</string>
@@ -94,6 +97,8 @@
 
     <string name="settings_section_signature">Ký số APK (Google apksig)</string>
     <string name="settings_auto_sign_desc">Ký APK với khóa Keystore RSA-2048 (Scheme v1, v2, v3)</string>
+    <string name="settings_bypass_signature_title">Kill Signature (Bypass chữ ký)</string>
+    <string name="settings_bypass_signature_desc">Tiêm PMS Hook giả lập chữ ký gốc, giúp vượt qua kiểm tra tính toàn vẹn Java và Google PairIP</string>
     <string name="settings_default_keystore_label">Khóa ký mặc định</string>
     <string name="settings_default_keystore_value">Universal Keystore RSA-2048 • SHA256withRSA</string>
 
