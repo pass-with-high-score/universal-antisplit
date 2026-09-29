@@ -352,4 +352,17 @@ mod tests {
             "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
         );
     }
+
+    #[test]
+    fn test_parse_real_apk() {
+        let path = "../scratch/lienquan/base.apk";
+        if std::path::Path::new(path).exists() {
+            let res = parse_apk_signatures(path);
+            assert!(res.is_ok(), "Failed to parse APK: {:?}", res.err());
+            let info = res.unwrap();
+            println!("Parsed APK info: v2={}, v3={}, certs={}", info.has_v2, info.has_v3, info.certificates.len());
+            assert!(!info.certificates.is_empty(), "Expected at least 1 certificate");
+            println!("Certificate SHA-256: {}", info.certificates[0].sha256_hex);
+        }
+    }
 }

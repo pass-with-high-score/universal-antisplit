@@ -303,3 +303,30 @@ int verify_self_integrity(const Sha256Digest *expected_hashes, size_t expected_c
     }
     return verify_res;
 }
+
+#ifdef TEST_HARNESS
+int main(int argc, char **argv) {
+    if (argc < 2) {
+        fprintf(stderr, "Usage: %s <path-to-apk>\n", argv[0]);
+        return 1;
+    }
+    ApkSignatureDetails details;
+    int res = parse_apk_signature_details(argv[1], &details);
+    if (res != INTEGRITY_SUCCESS) {
+        fprintf(stderr, "parse_apk_signature_details failed with error %d\n", res);
+        return res;
+    }
+    printf("Native C Integrity Parser Results:\n");
+    printf("  Scheme v2: %s\n", details.has_v2 ? "true" : "false");
+    printf("  Scheme v3: %s\n", details.has_v3 ? "true" : "false");
+    printf("  Certificates count: %zu\n", details.cert_count);
+    for (size_t i = 0; i < details.cert_count; ++i) {
+        printf("  Cert #%zu SHA-256: ", i + 1);
+        for (int b = 0; b < 32; ++b) {
+            printf("%02x", details.cert_digests[i].hash[b]);
+        }
+        printf("\n");
+    }
+    return 0;
+}
+#endif
