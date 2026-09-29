@@ -265,7 +265,8 @@ fun MainScreen(
                         isInstalledApp = state.isInstalledApp,
                         iconBitmap = state.iconBitmap,
                         onChangeClick = { viewModel.onReset() },
-                        extendedColors = extendedColors
+                        extendedColors = extendedColors,
+                        integrityResult = state.integrityResult,
                     )
                 }
             }

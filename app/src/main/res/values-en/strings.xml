@@ -32,6 +32,11 @@
     <string name="badge_splits_count">%1$d Splits</string>
     <string name="warning_pairip">Google PairIP / Play Integrity detected. The merged APK may need additional bypassing to run standalone.</string>
     <string name="warning_pairip_recommend_bypass">Google PairIP / Play Integrity detected. Enable \"Kill Signature\" to allow standalone execution without crashing.</string>
+    <string name="warning_native_integrity_title">Native Protection Detected</string>
+    <string name="warning_native_integrity_desc">Detected %1$s. This app contains a native C/C++ library that directly verifies APK binary signatures via Linux syscalls. After merging and re-signing with a new keystore, the app may crash (SIGSEGV) upon startup.</string>
+    <string name="badge_scheme_v2">Scheme v2</string>
+    <string name="badge_scheme_v3">Scheme v3</string>
+    <string name="badge_integrity_safe">Safe to Merge</string>
     <string name="action_enable_bypass_sig">Enable Kill Signature</string>
     <string name="status_injecting_pms_hook">Injecting PMS Signature Hook...</string>
     <string name="settings_bypass_signature_title">Kill Signature (Signature Bypass)</string>

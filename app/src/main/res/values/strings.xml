@@ -38,6 +38,11 @@
     <string name="badge_splits_count">%1$d Splits</string>
     <string name="warning_pairip">Phát hiện Google PairIP / Play Integrity. APK sau khi gộp có thể cần bypass bổ sung để chạy độc lập.</string>
     <string name="warning_pairip_recommend_bypass">Phát hiện Google PairIP / Play Integrity. Bạn nên bật \"Kill Signature\" để ứng dụng chạy độc lập không bị crash.</string>
+    <string name="warning_native_integrity_title">Cảnh báo bảo vệ tầng Native</string>
+    <string name="warning_native_integrity_desc">Phát hiện %1$s. Ứng dụng này chứa thư viện C/C++ tự kiểm tra chữ ký nhị phân từ ổ cứng qua Linux syscall. Sau khi gộp và ký lại bằng Keystore mới, ứng dụng có thể bị văng (SIGSEGV) khi khởi chạy.</string>
+    <string name="badge_scheme_v2">Scheme v2</string>
+    <string name="badge_scheme_v3">Scheme v3</string>
+    <string name="badge_integrity_safe">Toàn vẹn an toàn</string>
     <string name="action_enable_bypass_sig">Bật Kill Signature</string>
     <string name="status_injecting_pms_hook">Đang tiêm PMS Signature Hook...</string>
 

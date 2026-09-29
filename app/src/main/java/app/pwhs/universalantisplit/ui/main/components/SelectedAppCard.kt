@@ -55,6 +55,8 @@ import app.pwhs.universalantisplit.ui.components.StatusBadge
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+import app.pwhs.universalantisplit.data.scanner.IntegrityCheckResult
+
 @Composable
 fun SelectedAppCard(
     appName: String,
@@ -68,6 +70,7 @@ fun SelectedAppCard(
     onChangeClick: () -> Unit,
     extendedColors: ExtendedColors,
     modifier: Modifier = Modifier,
+    integrityResult: IntegrityCheckResult? = null,
 ) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
@@ -252,10 +255,64 @@ fun SelectedAppCard(
                         contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+
+                if (integrityResult?.hasV2Signature == true) {
+                    StatusBadge(
+                        text = stringResource(R.string.badge_scheme_v2),
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                    )
+                }
+
+                if (integrityResult?.hasV3Signature == true) {
+                    StatusBadge(
+                        text = stringResource(R.string.badge_scheme_v3),
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                    )
+                }
+            }
+
+            // Native Integrity / Anti-Cheat Warning
+            if (integrityResult?.isNativeProtectionDetected == true) {
+                Spacer(Modifier.height(Spacing.M))
+                Box(
+                    modifier = Modifier
+                        .clip(MaterialTheme.shapes.medium)
+                        .background(MaterialTheme.colorScheme.errorContainer)
+                        .padding(Spacing.M)
+                ) {
+                    Row(verticalAlignment = Alignment.Top) {
+                        Icon(
+                            imageVector = Icons.Rounded.WarningAmber,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(Modifier.width(Spacing.S))
+                        Column {
+                            Text(
+                                text = stringResource(R.string.warning_native_integrity_title),
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                            )
+                            Spacer(Modifier.height(2.dp))
+                            Text(
+                                text = stringResource(
+                                    R.string.warning_native_integrity_desc,
+                                    integrityResult.nativeProtectionLib ?: ""
+                                ),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                            )
+                        }
+                    }
+                }
             }
 
             // PairIP Warning
-            if (isPairIpDetected) {
+            val showPairIp = isPairIpDetected || (integrityResult?.isPairIpDetected == true)
+            if (showPairIp && integrityResult?.isNativeProtectionDetected != true) {
                 Spacer(Modifier.height(Spacing.M))
                 Box(
                     modifier = Modifier

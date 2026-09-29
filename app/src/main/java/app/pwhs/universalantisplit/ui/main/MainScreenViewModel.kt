@@ -16,6 +16,9 @@ import app.pwhs.universalantisplit.engine.merger.ApkMerger
 import app.pwhs.universalantisplit.engine.merger.ApkOutputManager
 import app.pwhs.universalantisplit.engine.merger.MergeOptions
 import app.pwhs.universalantisplit.engine.merger.SplitExtractionHelper
+import app.pwhs.universalantisplit.data.scanner.IntegrityCheckResult
+import app.pwhs.universalantisplit.data.scanner.IntegrityScanner
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,6 +26,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import android.content.Intent
 import android.os.Build
@@ -59,6 +63,7 @@ data class MainUiState(
     val iconBitmap: Bitmap? = null,
     val lastCompletedApkFile: File? = null,
     val lastCompletedDisplayPath: String? = null,
+    val integrityResult: IntegrityCheckResult? = null,
 )
 
 sealed interface MainEvent {
@@ -127,6 +132,10 @@ class MainScreenViewModel(
             splits.add(File(path).name)
         }
 
+        val filesToScan = mutableListOf<File>()
+        if (app.baseApkPath.isNotEmpty()) filesToScan.add(File(app.baseApkPath))
+        app.splitPaths.forEach { filesToScan.add(File(it)) }
+
         _uiState.update {
             it.copy(
                 selectedAppName = app.appName,
@@ -137,6 +146,7 @@ class MainScreenViewModel(
                 splitItems = splits,
                 selectedSplitItems = splits.toSet(),
                 isPairIpDetected = false,
+                integrityResult = null,
                 isAppPickerVisible = false,
                 isInstalledApp = true,
                 iconBitmap = null,
@@ -145,6 +155,14 @@ class MainScreenViewModel(
         }
         viewModelScope.launch {
             _events.send(MainEvent.ShowMessage(context.getString(R.string.msg_selected_app, app.appName)))
+            val scanResult = withContext(Dispatchers.IO) { IntegrityScanner.scanApkFiles(filesToScan) }
+            _uiState.update {
+                it.copy(
+                    integrityResult = scanResult,
+                    isPairIpDetected = scanResult.isPairIpDetected,
+                    bypassSignature = if (scanResult.isPairIpDetected) true else it.bypassSignature,
+                )
+            }
         }
     }
 
@@ -166,6 +184,7 @@ class MainScreenViewModel(
                         splitItems = info.splitNames,
                         selectedSplitItems = info.splitNames.toSet(),
                         isPairIpDetected = info.isPairIpDetected,
+                        integrityResult = null,
                         bypassSignature = if (info.isPairIpDetected) true else it.bypassSignature,
                         isInstalledApp = false,
                         iconBitmap = info.iconBitmap,
