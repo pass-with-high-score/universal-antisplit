@@ -22,6 +22,9 @@ import androidx.compose.material.icons.rounded.Android
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Layers
 import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -33,6 +36,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -63,10 +67,13 @@ fun AppPickerSheet(
     isLoading: Boolean,
     onDismiss: () -> Unit,
     onAppSelected: (InstalledAppInfo) -> Unit,
+    onBatchMergeSelected: (List<InstalledAppInfo>) -> Unit = {},
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var searchQuery by remember { mutableStateOf("") }
     var onlySplits by remember { mutableStateOf(false) }
+    var isMultiSelect by remember { mutableStateOf(false) }
+    var selectedPackages by remember { mutableStateOf(setOf<String>()) }
 
     val filteredApps = remember(apps, searchQuery, onlySplits) {
         apps.filter { app ->
@@ -136,27 +143,84 @@ fun AppPickerSheet(
 
             Spacer(Modifier.height(Spacing.S))
 
-            // Filter Chips
-            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.S)) {
+            // Filter Chips & Mode
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.S)) {
+                    FilterChip(
+                        selected = !onlySplits,
+                        onClick = { onlySplits = false },
+                        label = { Text(stringResource(R.string.picker_filter_all, apps.size)) },
+                        shape = MaterialTheme.shapes.small
+                    )
+                    FilterChip(
+                        selected = onlySplits,
+                        onClick = { onlySplits = true },
+                        label = { Text(stringResource(R.string.picker_filter_only_splits, apps.count { it.isSplitApp })) },
+                        leadingIcon = {
+                            Icon(imageVector = Icons.Rounded.Layers, contentDescription = null, modifier = Modifier.size(16.dp))
+                        },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        ),
+                        shape = MaterialTheme.shapes.small
+                    )
+                }
+
                 FilterChip(
-                    selected = !onlySplits,
-                    onClick = { onlySplits = false },
-                    label = { Text(stringResource(R.string.picker_filter_all, apps.size)) },
-                    shape = MaterialTheme.shapes.small
-                )
-                FilterChip(
-                    selected = onlySplits,
-                    onClick = { onlySplits = true },
-                    label = { Text(stringResource(R.string.picker_filter_only_splits, apps.count { it.isSplitApp })) },
-                    leadingIcon = {
-                        Icon(imageVector = Icons.Rounded.Layers, contentDescription = null, modifier = Modifier.size(16.dp))
+                    selected = isMultiSelect,
+                    onClick = {
+                        isMultiSelect = !isMultiSelect
+                        if (!isMultiSelect) selectedPackages = emptySet()
                     },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    ),
+                    label = {
+                        Text(
+                            text = if (isMultiSelect) stringResource(R.string.picker_mode_single_select) else stringResource(R.string.picker_mode_multi_select)
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(imageVector = Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(16.dp))
+                    },
                     shape = MaterialTheme.shapes.small
                 )
+            }
+
+            if (isMultiSelect) {
+                Spacer(Modifier.height(Spacing.XS))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.picker_selected_count, selectedPackages.size),
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    TextButton(
+                        onClick = {
+                            selectedPackages = if (selectedPackages.size == filteredApps.size) {
+                                emptySet()
+                            } else {
+                                filteredApps.map { it.packageName }.toSet()
+                            }
+                        }
+                    ) {
+                        Text(
+                            text = if (selectedPackages.size == filteredApps.size && filteredApps.isNotEmpty()) {
+                                stringResource(R.string.picker_deselect_all)
+                            } else {
+                                stringResource(R.string.picker_select_all)
+                            },
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    }
+                }
             }
 
             Spacer(Modifier.height(Spacing.M))
@@ -183,7 +247,46 @@ fun AppPickerSheet(
                         .weight(1f)
                 ) {
                     items(filteredApps, key = { it.packageName }) { app ->
-                        AppListItem(app = app, onClick = { onAppSelected(app) })
+                        val isSelected = app.packageName in selectedPackages
+                        AppListItem(
+                            app = app,
+                            isMultiSelect = isMultiSelect,
+                            isSelected = isSelected,
+                            onClick = {
+                                if (isMultiSelect) {
+                                    selectedPackages = if (isSelected) {
+                                        selectedPackages - app.packageName
+                                    } else {
+                                        selectedPackages + app.packageName
+                                    }
+                                } else {
+                                    onAppSelected(app)
+                                }
+                            }
+                        )
+                    }
+                }
+
+                if (isMultiSelect) {
+                    Button(
+                        onClick = {
+                            val selected = apps.filter { it.packageName in selectedPackages }
+                            onBatchMergeSelected(selected)
+                        },
+                        enabled = selectedPackages.isNotEmpty(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = Spacing.M)
+                            .height(50.dp),
+                        shape = MaterialTheme.shapes.large
+                    ) {
+                        Icon(imageVector = Icons.Rounded.Layers, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(Spacing.S))
+                        Text(
+                            text = stringResource(R.string.picker_btn_merge_selected, selectedPackages.size),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }
@@ -194,6 +297,8 @@ fun AppPickerSheet(
 @Composable
 private fun AppListItem(
     app: InstalledAppInfo,
+    isMultiSelect: Boolean = false,
+    isSelected: Boolean = false,
     onClick: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -271,6 +376,14 @@ private fun AppListItem(
                     )
                 }
             }
+        }
+
+        if (isMultiSelect) {
+            Spacer(Modifier.width(Spacing.S))
+            Checkbox(
+                checked = isSelected,
+                onCheckedChange = { onClick() }
+            )
         }
     }
 }

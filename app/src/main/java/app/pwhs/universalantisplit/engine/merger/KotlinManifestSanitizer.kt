@@ -16,6 +16,7 @@ object KotlinManifestSanitizer {
         "isFeatureSplit".toByteArray(StandardCharsets.US_ASCII) to "__isFeatSplit_".toByteArray(StandardCharsets.US_ASCII),
         "isolatedSplits".toByteArray(StandardCharsets.US_ASCII) to "__isolated_spt".toByteArray(StandardCharsets.US_ASCII),
         "splitTypes".toByteArray(StandardCharsets.US_ASCII) to "__sptTypes".toByteArray(StandardCharsets.US_ASCII),
+        "isSplitRequired".toByteArray(StandardCharsets.US_ASCII) to "__isSplitReq__".toByteArray(StandardCharsets.US_ASCII),
         "split".toByteArray(StandardCharsets.US_ASCII) to "__spt".toByteArray(StandardCharsets.US_ASCII),
     )
 

@@ -121,7 +121,8 @@ fun MainScreen(
             apps = state.installedApps,
             isLoading = state.isLoadingApps,
             onDismiss = { viewModel.showAppPicker(false) },
-            onAppSelected = { app -> viewModel.onInstalledAppSelected(app) }
+            onAppSelected = { app -> viewModel.onInstalledAppSelected(app) },
+            onBatchMergeSelected = { selectedApps -> viewModel.onBatchMergeApps(selectedApps) }
         )
     }
 
@@ -333,6 +334,23 @@ fun MainScreen(
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
+                                if (state.selectedAppName != null) {
+                                    Spacer(Modifier.height(4.dp))
+                                    Text(
+                                        text = if (state.isPairIpDetected) {
+                                            stringResource(R.string.settings_bypass_pairip_found_hint)
+                                        } else {
+                                            stringResource(R.string.settings_bypass_no_pairip_hint)
+                                        },
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = if (state.isPairIpDetected) {
+                                            extendedColors.warning
+                                        } else {
+                                            MaterialTheme.colorScheme.tertiary
+                                        },
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
                             }
                             Switch(
                                 checked = state.bypassSignature,

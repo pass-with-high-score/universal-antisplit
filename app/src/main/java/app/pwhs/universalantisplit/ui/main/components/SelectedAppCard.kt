@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Android
+import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Fingerprint
 import androidx.compose.material.icons.rounded.SwapHoriz
@@ -313,7 +314,7 @@ fun SelectedAppCard(
                 }
             }
 
-            // PairIP Warning
+            // PairIP Warning & Status
             val showPairIp = isPairIpDetected || (integrityResult?.isPairIpDetected == true)
             if (showPairIp && integrityResult?.isNativeProtectionDetected != true) {
                 Spacer(Modifier.height(Spacing.M))
@@ -332,9 +333,32 @@ fun SelectedAppCard(
                         )
                         Spacer(Modifier.width(Spacing.S))
                         Text(
-                            text = stringResource(R.string.warning_pairip_recommend_bypass),
+                            text = stringResource(R.string.status_pairip_detected_badge),
                             style = MaterialTheme.typography.bodySmall,
                             color = extendedColors.onWarning,
+                        )
+                    }
+                }
+            } else if (!showPairIp && integrityResult != null && !integrityResult.isNativeProtectionDetected) {
+                Spacer(Modifier.height(Spacing.M))
+                Box(
+                    modifier = Modifier
+                        .clip(MaterialTheme.shapes.medium)
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
+                        .padding(horizontal = Spacing.M, vertical = Spacing.S)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Rounded.CheckCircle,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(Modifier.width(Spacing.S))
+                        Text(
+                            text = stringResource(R.string.status_pairip_not_detected_badge),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }

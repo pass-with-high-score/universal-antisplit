@@ -42,35 +42,6 @@ import java.io.File
 import app.pwhs.universalantisplit.data.local.PreferenceKeys
 import app.pwhs.universalantisplit.data.local.dataStore
 
-data class MainUiState(
-    val selectedAppName: String? = null,
-    val selectedPackageName: String? = null,
-    val selectedVersionName: String? = null,
-    val selectedFileSize: String? = null,
-    val splitCount: Int = 0,
-    val splitItems: List<String> = emptyList(),
-    val selectedSplitItems: Set<String> = emptySet(),
-    val isPairIpDetected: Boolean = false,
-    val autoSignMergedApk: Boolean = true,
-    val bypassSignature: Boolean = false,
-    val isMerging: Boolean = false,
-    val mergeProgress: Float = 0f,
-    val mergeStatusText: String = "",
-    val installedApps: List<InstalledAppInfo> = emptyList(),
-    val isLoadingApps: Boolean = false,
-    val isAppPickerVisible: Boolean = false,
-    val isInstalledApp: Boolean = false,
-    val iconBitmap: Bitmap? = null,
-    val lastCompletedApkFile: File? = null,
-    val lastCompletedDisplayPath: String? = null,
-    val integrityResult: IntegrityCheckResult? = null,
-)
-
-sealed interface MainEvent {
-    data class ShowMessage(val message: String) : MainEvent
-    data class MergeCompleted(val outputPath: String, val outputFile: File, val outputUri: Uri) : MainEvent
-}
-
 class MainScreenViewModel(
     private val context: Context,
     private val dataRepository: DataRepository,
@@ -160,7 +131,7 @@ class MainScreenViewModel(
                 it.copy(
                     integrityResult = scanResult,
                     isPairIpDetected = scanResult.isPairIpDetected,
-                    bypassSignature = if (scanResult.isPairIpDetected) true else it.bypassSignature,
+                    bypassSignature = scanResult.isPairIpDetected,
                 )
             }
         }
@@ -185,7 +156,7 @@ class MainScreenViewModel(
                         selectedSplitItems = info.splitNames.toSet(),
                         isPairIpDetected = info.isPairIpDetected,
                         integrityResult = null,
-                        bypassSignature = if (info.isPairIpDetected) true else it.bypassSignature,
+                        bypassSignature = info.isPairIpDetected,
                         isInstalledApp = false,
                         iconBitmap = info.iconBitmap,
                         isMerging = false,
@@ -229,6 +200,11 @@ class MainScreenViewModel(
 
     fun onToggleBypassSignature(bypass: Boolean) {
         _uiState.update { it.copy(bypassSignature = bypass) }
+        if (bypass && !_uiState.value.isPairIpDetected && _uiState.value.selectedAppName != null) {
+            viewModelScope.launch {
+                _events.send(MainEvent.ShowMessage(context.getString(R.string.warning_pairip_not_detected_toggle)))
+            }
+        }
     }
 
     private fun observeMergeWorker() {
@@ -376,60 +352,74 @@ class MainScreenViewModel(
         }
     }
 
+    fun onBatchMergeApps(apps: List<InstalledAppInfo>) {
+        if (apps.isEmpty()) return
+        showAppPicker(false)
+
+        if (apps.size == 1) {
+            onInstalledAppSelected(apps.first())
+            onStartMerge()
+            return
+        }
+
+        viewModelScope.launch {
+            _events.send(MainEvent.ShowMessage(context.getString(R.string.msg_batch_merge_started, apps.size)))
+        }
+
+        val requests = apps.map { app ->
+            val inputData = workDataOf(
+                ApkMergerWorker.KEY_IS_INSTALLED_APP to true,
+                ApkMergerWorker.KEY_INSTALLED_BASE_APK_PATH to app.baseApkPath,
+                ApkMergerWorker.KEY_INSTALLED_SPLIT_PATHS to app.splitPaths.toTypedArray(),
+                ApkMergerWorker.KEY_SELECTED_SPLIT_NAMES to app.splitPaths.map { java.io.File(it).name }.toTypedArray(),
+                ApkMergerWorker.KEY_AUTO_SIGN to _uiState.value.autoSignMergedApk,
+                ApkMergerWorker.KEY_BYPASS_SIGNATURE to false,
+                ApkMergerWorker.KEY_APP_NAME to app.appName,
+                ApkMergerWorker.KEY_PACKAGE_NAME to app.packageName,
+                ApkMergerWorker.KEY_VERSION_NAME to app.versionName
+            )
+            OneTimeWorkRequestBuilder<ApkMergerWorker>()
+                .setInputData(inputData)
+                .addTag("apk_merge")
+                .addTag("batch_merge")
+                .build()
+        }
+
+        var continuation = workManager.beginUniqueWork(
+            ApkMergerWorker.WORK_NAME,
+            ExistingWorkPolicy.REPLACE,
+            requests.first()
+        )
+        for (i in 1 until requests.size) {
+            continuation = continuation.then(requests[i])
+        }
+        continuation.enqueue()
+
+        _uiState.update {
+            it.copy(
+                isMerging = true,
+                mergeProgress = 0.05f,
+                mergeStatusText = context.getString(R.string.msg_batch_merge_started, apps.size)
+            )
+        }
+    }
+
+    private val externalIntentHandler = ExternalIntentHandler(context, packageScanner)
+
     /**
      * Handles incoming intent from external apps, file managers, or Universal Installer.
      */
     fun handleIncomingIntent(intent: Intent?) {
         if (intent == null) return
-        val action = intent.action ?: return
-        Timber.i("Processing incoming intent: action=$action, data=${intent.data}")
-
-        // Check auto-sign preference override if provided
-        if (intent.hasExtra(UniversalInstallerProtocol.EXTRA_AUTO_SIGN)) {
-            val autoSign = intent.getBooleanExtra(UniversalInstallerProtocol.EXTRA_AUTO_SIGN, true)
-            onToggleAutoSign(autoSign)
-        }
-
-        val autoStart = intent.getBooleanExtra(UniversalInstallerProtocol.EXTRA_AUTO_START, false)
-
-        // 1. Check if a specific target package was requested (e.g. from Universal Installer)
-        val targetPackage = intent.getStringExtra(UniversalInstallerProtocol.EXTRA_PACKAGE_NAME)
-        if (!targetPackage.isNullOrBlank()) {
-            viewModelScope.launch {
-                _events.send(MainEvent.ShowMessage(context.getString(R.string.msg_loading_intent_source)))
-                _uiState.update { it.copy(isLoadingApps = true) }
-                val matched = packageScanner.getAppByPackageName(targetPackage)
-                _uiState.update { it.copy(isLoadingApps = false) }
-
-                if (matched != null) {
-                    onInstalledAppSelected(matched)
-                    if (autoStart) {
-                        onStartMerge()
-                    }
-                } else {
-                    _events.send(MainEvent.ShowMessage(context.getString(R.string.msg_package_not_found, targetPackage)))
+        viewModelScope.launch {
+            _events.send(MainEvent.ShowMessage(context.getString(R.string.msg_loading_intent_source)))
+            when (val result = externalIntentHandler.processIntent(intent, onAutoSignOverride = { onToggleAutoSign(it) })) {
+                is IntentProcessResult.TargetAppFound -> {
+                    onInstalledAppSelected(result.app)
+                    if (result.autoStart) onStartMerge()
                 }
-            }
-            return
-        }
-
-        // 2. Check Uri from intent.data or intent.clipData or EXTRA_STREAM
-        val uri = intent.data
-            ?: intent.clipData?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.uri
-            ?: if (action == Intent.ACTION_SEND) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
-                } else {
-                    @Suppress("DEPRECATION")
-                    intent.getParcelableExtra(Intent.EXTRA_STREAM)
-                }
-            } else null
-
-        if (uri != null) {
-            viewModelScope.launch {
-                _events.send(MainEvent.ShowMessage(context.getString(R.string.msg_loading_intent_source)))
-                val info = packageScanner.inspectExternalFile(uri)
-                if (info != null) {
+                is IntentProcessResult.ExternalFileLoaded -> {
+                    val info = result.info
                     currentExternalPackage = info
                     currentInstalledApp = null
                     _uiState.update {
@@ -447,12 +437,12 @@ class MainScreenViewModel(
                         )
                     }
                     _events.send(MainEvent.ShowMessage(context.getString(R.string.msg_file_received_from_app, info.appName ?: info.name)))
-                    if (autoStart) {
-                        onStartMerge()
-                    }
-                } else {
-                    _events.send(MainEvent.ShowMessage(context.getString(R.string.msg_cannot_read_file)))
+                    if (result.autoStart) onStartMerge()
                 }
+                is IntentProcessResult.Message -> {
+                    _events.send(MainEvent.ShowMessage(result.message))
+                }
+                null -> {}
             }
         }
     }

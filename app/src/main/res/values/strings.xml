@@ -194,4 +194,22 @@
     <string name="history_no_results_title">Không tìm thấy kết quả</string>
     <string name="history_no_results_subtitle">Thử tìm kiếm với từ khóa khác hoặc điều chỉnh bộ lọc</string>
     <string name="history_clear_filters">Xóa bộ lọc</string>
+
+    <!-- Cảnh báo & trạng thái PairIP -->
+    <string name="warning_pairip_not_detected_toggle">Ứng dụng này không có PairIP (libpairipcore.so). Không nên bật tính năng này để tránh xung đột.</string>
+    <string name="status_pairip_not_detected_badge">Chữ ký tiêu chuẩn (Không có PairIP)</string>
+    <string name="status_pairip_detected_badge">Phát hiện Google PairIP (Khuyên dùng Bypass Signature)</string>
+    <string name="msg_bypass_auto_disabled_no_pairip">Tự động tắt Bypass chữ ký vì ứng dụng không chứa libpairipcore.so.</string>
+    <string name="settings_bypass_no_pairip_hint">Không có libpairipcore.so (Khuyên tắt)</string>
+    <string name="settings_bypass_pairip_found_hint">Phát hiện libpairipcore.so (Khuyên bật)</string>
+
+    <!-- Chọn nhiều ứng dụng (Multi-select) -->
+    <string name="picker_mode_multi_select">Chọn nhiều</string>
+    <string name="picker_mode_single_select">Chọn đơn</string>
+    <string name="picker_select_all">Chọn tất cả</string>
+    <string name="picker_deselect_all">Bỏ chọn</string>
+    <string name="picker_selected_count">Đã chọn %1$d</string>
+    <string name="picker_btn_merge_selected">Gộp %1$d ứng dụng đã chọn</string>
+    <string name="msg_batch_merge_started">Đang bắt đầu gộp hàng loạt %1$d ứng dụng...</string>
+    <string name="msg_batch_merge_completed">Đã hoàn thành gộp hàng loạt %1$d ứng dụng.</string>
 </resources>
