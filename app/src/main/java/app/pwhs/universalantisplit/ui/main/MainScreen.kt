@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Apps
 import androidx.compose.material.icons.rounded.AutoFixHigh
+import androidx.compose.material.icons.rounded.CleaningServices
 import androidx.compose.material.icons.rounded.FolderOpen
 import androidx.compose.material.icons.rounded.Layers
 import androidx.compose.material.icons.rounded.Settings
@@ -67,6 +68,7 @@ import app.pwhs.universalantisplit.theme.LocalExtendedColors
 import app.pwhs.universalantisplit.theme.Spacing
 import org.koin.androidx.compose.koinViewModel
 import app.pwhs.universalantisplit.ui.components.AppPickerSheet
+import app.pwhs.universalantisplit.ui.main.components.ClearCacheDialog
 import app.pwhs.universalantisplit.ui.components.EmptyStateView
 import app.pwhs.universalantisplit.ui.components.SettingsSection
 import app.pwhs.universalantisplit.ui.main.components.BatchMiniProgressBar
@@ -75,6 +77,7 @@ import app.pwhs.universalantisplit.ui.main.components.BatchSummaryDialog
 import app.pwhs.universalantisplit.ui.main.components.MergeProgressSheet
 import app.pwhs.universalantisplit.ui.main.components.MergeSuccessDialog
 import app.pwhs.universalantisplit.ui.main.components.SelectedAppCard
+import app.pwhs.universalantisplit.ui.main.components.SignatureDetailsBottomSheet
 import app.pwhs.universalantisplit.ui.main.components.SplitComponentsCard
 import java.io.File
 import android.content.Intent
@@ -177,7 +180,25 @@ fun MainScreen(
                     context.startActivity(shareIntent)
                 }
             },
+            onViewSignature = { viewModel.inspectApkSignature(it) },
             onDismiss = { successDialogData = null }
+        )
+    }
+
+    if (state.isSignatureSheetVisible && state.signatureInfo != null) {
+        SignatureDetailsBottomSheet(
+            signatureInfo = state.signatureInfo,
+            onDismiss = { viewModel.setSignatureSheetVisible(false) },
+        )
+    }
+
+    if (state.isClearCacheDialogVisible) {
+        ClearCacheDialog(
+            cacheSize = state.cacheSize,
+            isClearingCache = state.isClearingCache,
+            onClearTemp = { viewModel.clearCache(includeLocalMerged = false) },
+            onClearAll = { viewModel.clearCache(includeLocalMerged = true) },
+            onDismiss = { viewModel.showClearCacheDialog(false) }
         )
     }
 
@@ -209,6 +230,17 @@ fun MainScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
+                    }
+                },
+                actions = {
+                    IconButton(
+                        onClick = { viewModel.showClearCacheDialog(true) }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.CleaningServices,
+                            contentDescription = stringResource(R.string.home_clear_cache_tooltip),
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -307,6 +339,10 @@ fun MainScreen(
                         onChangeClick = { viewModel.onReset() },
                         extendedColors = extendedColors,
                         integrityResult = state.integrityResult,
+                        signatureInfo = state.signatureInfo,
+                        onViewSignatureClick = if (state.signatureInfo != null) {
+                            { viewModel.setSignatureSheetVisible(true) }
+                        } else null,
                     )
                 }
             }

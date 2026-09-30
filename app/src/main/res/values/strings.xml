@@ -40,8 +40,10 @@
     <string name="warning_pairip_recommend_bypass">Phát hiện Google PairIP / Play Integrity. Bạn nên bật \"Kill Signature\" để ứng dụng chạy độc lập không bị crash.</string>
     <string name="warning_native_integrity_title">Cảnh báo bảo vệ tầng Native</string>
     <string name="warning_native_integrity_desc">Phát hiện %1$s. Ứng dụng này chứa thư viện C/C++ tự kiểm tra chữ ký nhị phân từ ổ cứng qua Linux syscall. Sau khi gộp và ký lại bằng Keystore mới, ứng dụng có thể bị văng (SIGSEGV) khi khởi chạy.</string>
+    <string name="badge_scheme_v1">Scheme v1</string>
     <string name="badge_scheme_v2">Scheme v2</string>
     <string name="badge_scheme_v3">Scheme v3</string>
+    <string name="badge_scheme_v4">Scheme v4</string>
     <string name="badge_integrity_safe">Toàn vẹn an toàn</string>
     <string name="action_enable_bypass_sig">Bật Kill Signature</string>
     <string name="status_injecting_pms_hook">Đang tiêm PMS Signature Hook...</string>
@@ -106,6 +108,33 @@
     <string name="settings_bypass_signature_desc">Tiêm PMS Hook giả lập chữ ký gốc, giúp vượt qua kiểm tra tính toàn vẹn Java và Google PairIP</string>
     <string name="settings_default_keystore_label">Khóa ký mặc định</string>
     <string name="settings_default_keystore_value">Universal Keystore RSA-2048 • SHA256withRSA</string>
+
+    <!-- Quản lý Keystore xuất/nhập -->
+    <string name="keystore_export_title">Xuất Keystore</string>
+    <string name="keystore_import_title">Nhập Keystore</string>
+    <string name="keystore_export_success">Đã xuất Keystore thành công</string>
+    <string name="keystore_import_success">Đã nhập Keystore thành công</string>
+    <string name="keystore_import_error">Không thể nhập Keystore: %1$s</string>
+    <string name="keystore_export_error">Không thể xuất Keystore: %1$s</string>
+    <string name="keystore_fingerprint_label">SHA-256 Fingerprint</string>
+    <string name="keystore_alias_label">Alias: %1$s</string>
+    <string name="keystore_valid_until">Hạn dùng: %1$s</string>
+    <string name="keystore_badge_default">Mặc định</string>
+    <string name="keystore_badge_custom">Tùy chỉnh</string>
+    <string name="keystore_reset_default">Đặt lại mặc định</string>
+    <string name="keystore_reset_confirm_title">Đặt lại Keystore?</string>
+    <string name="keystore_reset_confirm_message">Khóa ký hiện tại sẽ được thay thế bằng Keystore mặc định mới của ứng dụng. Bạn có chắc chắn?</string>
+    <string name="keystore_import_dialog_title">Nhập Keystore</string>
+    <string name="keystore_import_dialog_desc">Nhập mật khẩu và bí danh (alias) của tệp keystore nếu có. Nếu là tệp xuất từ Universal Anti-Split, có thể để trống.</string>
+    <string name="keystore_password_field">Mật khẩu Keystore</string>
+    <string name="keystore_alias_field">Bí danh (Alias)</string>
+    <string name="keystore_fingerprint_copied">Đã sao chép dấu vân tay SHA-256</string>
+
+    <!-- Dọn cache màn hình chính -->
+    <string name="home_clear_cache_tooltip">Dọn dẹp bộ nhớ đệm</string>
+    <string name="home_clear_cache_dialog_title">Dọn dẹp bộ nhớ đệm</string>
+    <string name="home_clear_cache_dialog_desc">Giải phóng dung lượng bộ nhớ đệm của các tệp tạm và dữ liệu giải nén Split APK.</string>
+    <string name="home_cache_freed_message">Đã dọn dẹp bộ nhớ đệm (giải phóng %1$s)</string>
 
     <string name="settings_section_about">Thông tin ứng dụng</string>
 
@@ -286,4 +315,74 @@
     <string name="onboarding_setup_theme_label">Chế độ giao diện</string>
     <string name="onboarding_setup_ready_title">Mọi thứ đã sẵn sàng!</string>
     <string name="onboarding_setup_ready_desc">Bắt đầu gộp và tạo những tệp APK độc lập đầu tiên của bạn ngay bây giờ.</string>
+
+    <!-- Đọc và Phân tích chữ ký APK (Học từ InstallerX-Revived) -->
+    <string name="signature_details_title">Chi tiết chữ ký APK</string>
+    <string name="signature_details_subtitle">Chứng chỉ bảo mật và thuật toán xác thực</string>
+    <string name="signature_action_view">Xem chữ ký</string>
+    <string name="signature_btn_inspect">Xem chi tiết chữ ký APK</string>
+    <string name="signature_status_verified">Chữ ký hợp lệ</string>
+    <string name="signature_status_unverified">Chữ ký không hợp lệ</string>
+    <string name="signature_schemes_label">Cơ chế ký (Schemes)</string>
+    <string name="signature_subject_label">Chủ thể (Subject)</string>
+    <string name="signature_issuer_label">Tổ chức cấp (Issuer)</string>
+    <string name="signature_valid_from">Hiệu lực từ</string>
+    <string name="signature_valid_until">Hạn dùng đến</string>
+    <string name="signature_serial_label">Số sê-ri</string>
+    <string name="signature_public_key_algo">Thuật toán khóa</string>
+    <string name="signature_algo_label">Thuật toán chữ ký</string>
+    <string name="signature_sha256_copied">Đã sao chép SHA-256 Fingerprint</string>
+    <string name="signature_sha1_copied">Đã sao chép SHA-1</string>
+    <string name="signature_md5_copied">Đã sao chép MD5</string>
+    <string name="signature_lineage_title">Lịch sử xoay chứng chỉ (Lineage)</string>
+    <string name="signature_no_signatures_found">Không tìm thấy chữ ký hợp lệ</string>
+    <string name="signature_read_error">Lỗi đọc chữ ký: %1$s</string>
+    <string name="signature_btn_view_merged">Xem chữ ký APK đã gộp</string>
+    <string name="about_project_repo">pass-with-high-score/universal-antisplit</string>
+    <string name="about_project_subtitle">Fast, modern standalone APK merger &amp; anti-split tool for Android</string>
+    <string name="about_view_on_github">Xem dự án trên GitHub</string>
+    <string name="about_open_source_license">Mã nguồn mở • Giấy phép GPL-3.0</string>
+
+    <!-- Ecosystem & Related Projects -->
+    <string name="about_ecosystem_title">Hệ sinh thái Pass With High Score</string>
+    <string name="about_ecosystem_subtitle">Khám phá các công cụ Android mã nguồn mở khác cùng nhà phát triển</string>
+
+    <string name="project_installer_title">Universal Installer</string>
+    <string name="project_installer_repo">pass-with-high-score/universal-installer</string>
+    <string name="project_installer_desc">Trình cài đặt và quản lý tệp APK hiện đại: hỗ trợ Split APK, cài đặt ngầm qua Shizuku và quét mã độc VirusTotal.</string>
+    <string name="project_installer_tag">Ứng dụng đồng hành</string>
+
+    <string name="project_blockads_title">BlockAds Android</string>
+    <string name="project_blockads_repo">pass-with-high-score/blockads-android</string>
+    <string name="project_blockads_desc">Chặn quảng cáo toàn hệ thống Android bằng bộ lọc DNS VPN cục bộ. Không cần root, không thu thập dữ liệu cá nhân.</string>
+    <string name="project_blockads_tag">Bảo mật &amp; Quyền riêng tư</string>
+
+    <!-- Community & Support -->
+    <string name="about_community_title">Cộng đồng &amp; Hỗ trợ</string>
+    <string name="about_community_subtitle">Tham gia thảo luận, báo lỗi và cập nhật tính năng mới</string>
+    <string name="about_telegram_title">Telegram Community</string>
+    <string name="about_telegram_handle">@blockads_android</string>
+    <string name="about_telegram_desc">Tham gia cộng đồng Telegram để trao đổi, cập nhật tin tức và nhận hỗ trợ từ nhà phát triển.</string>
+    <string name="about_telegram_tag">Cộng đồng chính thức</string>
+    <string name="about_telegram_link" translatable="false">https://t.me/blockads_android</string>
+
+    <!-- About Section Labels (Universal Installer Style) -->
+    <string name="about_section_app">Ứng dụng</string>
+    <string name="about_section_ecosystem">Hệ sinh thái</string>
+    <string name="about_section_community">Cộng đồng</string>
+    <string name="about_section_legal">Pháp lý</string>
+    <string name="about_section_device">Thiết bị</string>
+    <string name="about_creator_title">Phát triển bởi</string>
+    <string name="about_creator_subtitle">Pass With High Score</string>
+    <string name="about_license_title">Giấy phép mã nguồn mở</string>
+    <string name="about_license_subtitle">GNU General Public License v3.0 (GPL-3.0)</string>
+    <string name="about_device_info_title">Thông tin thiết bị</string>
+    <string name="about_device_manufacturer">Nhà sản xuất: %1$s</string>
+    <string name="about_device_model">Mẫu máy: %1$s</string>
+    <string name="about_device_sdk">Android SDK: %1$s</string>
+    <string name="about_device_os">Phiên bản Android: %1$s</string>
+    <string name="about_device_arch">Kiến trúc CPU: %1$s</string>
+    <string name="about_btn_copy">Sao chép</string>
+    <string name="about_btn_ok">OK</string>
+    <string name="about_copied">Đã sao chép vào bộ nhớ tạm</string>
 </resources>

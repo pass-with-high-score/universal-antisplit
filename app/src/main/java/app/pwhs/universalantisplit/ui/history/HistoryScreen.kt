@@ -21,9 +21,10 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.DeleteForever
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.SearchOff
-import androidx.compose.material3.AlertDialog
+import app.pwhs.universalantisplit.ui.components.AppConfirmDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -75,20 +76,16 @@ fun HistoryScreen(
     }
 
     if (uiState.showClearConfirm) {
-        AlertDialog(
+        AppConfirmDialog(
             onDismissRequest = { viewModel.showClearConfirm(false) },
-            title = { Text(stringResource(R.string.history_confirm_clear_title)) },
-            text = { Text(stringResource(R.string.history_confirm_clear_message)) },
-            confirmButton = {
-                TextButton(onClick = { viewModel.clearAll() }) {
-                    Text(stringResource(R.string.action_confirm))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { viewModel.showClearConfirm(false) }) {
-                    Text(stringResource(R.string.action_cancel))
-                }
-            }
+            icon = Icons.Rounded.DeleteForever,
+            isDestructive = true,
+            title = stringResource(R.string.history_confirm_clear_title),
+            message = stringResource(R.string.history_confirm_clear_message),
+            confirmText = stringResource(R.string.action_confirm),
+            cancelText = stringResource(R.string.action_cancel),
+            onConfirm = { viewModel.clearAll() },
+            onCancel = { viewModel.showClearConfirm(false) }
         )
     }
 

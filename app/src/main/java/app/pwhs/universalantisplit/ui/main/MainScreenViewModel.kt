@@ -1,14 +1,22 @@
 package app.pwhs.universalantisplit.ui.main
 
 import android.content.Context
-import android.graphics.Bitmap
+import android.content.Intent
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import app.pwhs.universalantisplit.R
 import app.pwhs.universalantisplit.data.DataRepository
-import app.pwhs.universalantisplit.data.local.db.entity.ConversionHistory
+import app.pwhs.universalantisplit.data.cache.AppCacheManager
+import app.pwhs.universalantisplit.data.local.PreferenceKeys
+import app.pwhs.universalantisplit.data.local.dataStore
 import app.pwhs.universalantisplit.data.repository.HistoryRepository
+import app.pwhs.universalantisplit.data.scanner.IntegrityScanner
 import app.pwhs.universalantisplit.data.scanner.PackageScanner
 import app.pwhs.universalantisplit.domain.InstalledAppInfo
 import app.pwhs.universalantisplit.domain.SplitPackageInfo
@@ -16,8 +24,10 @@ import app.pwhs.universalantisplit.engine.merger.ApkMerger
 import app.pwhs.universalantisplit.engine.merger.ApkOutputManager
 import app.pwhs.universalantisplit.engine.merger.MergeOptions
 import app.pwhs.universalantisplit.engine.merger.SplitExtractionHelper
-import app.pwhs.universalantisplit.data.scanner.IntegrityCheckResult
-import app.pwhs.universalantisplit.data.scanner.IntegrityScanner
+import app.pwhs.universalantisplit.engine.signature.ApkSignatureReader
+import app.pwhs.universalantisplit.protocol.UniversalInstallerProtocol
+import app.pwhs.universalantisplit.worker.ApkMergerWorker
+import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,19 +38,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
-import android.content.Intent
-import android.os.Build
-import app.pwhs.universalantisplit.protocol.UniversalInstallerProtocol
-import androidx.work.ExistingWorkPolicy
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkInfo
-import androidx.work.WorkManager
-import androidx.work.workDataOf
-import app.pwhs.universalantisplit.worker.ApkMergerWorker
-import java.io.File
-
-import app.pwhs.universalantisplit.data.local.PreferenceKeys
-import app.pwhs.universalantisplit.data.local.dataStore
 
 class MainScreenViewModel(
     private val context: Context,
@@ -51,6 +48,7 @@ class MainScreenViewModel(
     private val splitExtractionHelper: SplitExtractionHelper,
     private val historyRepository: HistoryRepository,
     private val workManager: WorkManager,
+    private val appCacheManager: AppCacheManager,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MainUiState())
@@ -66,6 +64,7 @@ class MainScreenViewModel(
         loadInstalledApps()
         observeMergeWorker()
         observeSettings()
+        refreshCacheSize()
     }
 
     private fun observeSettings() {
@@ -127,12 +126,47 @@ class MainScreenViewModel(
         viewModelScope.launch {
             _events.send(MainEvent.ShowMessage(context.getString(R.string.msg_selected_app, app.appName)))
             val scanResult = withContext(Dispatchers.IO) { IntegrityScanner.scanApkFiles(filesToScan) }
+            val sigInfo = withContext(Dispatchers.IO) {
+                ApkSignatureReader.readFromInstalledPackage(context, app.packageName)
+                    ?: filesToScan.firstOrNull()?.let { ApkSignatureReader.readFromApkFile(it) }
+            }
             _uiState.update {
                 it.copy(
                     integrityResult = scanResult,
+                    signatureInfo = sigInfo,
                     isPairIpDetected = scanResult.isPairIpDetected,
                     bypassSignature = scanResult.isPairIpDetected,
                 )
+            }
+        }
+    }
+
+    private fun applyExternalPackage(info: SplitPackageInfo) {
+        currentExternalPackage = info
+        currentInstalledApp = null
+        _uiState.update {
+            it.copy(
+                selectedAppName = info.appName ?: info.name,
+                selectedPackageName = info.packageName,
+                selectedVersionName = info.versionName,
+                selectedFileSize = info.sizeFormatted,
+                splitCount = info.splitNames.size,
+                splitItems = info.splitNames,
+                selectedSplitItems = info.splitNames.toSet(),
+                isPairIpDetected = info.isPairIpDetected,
+                integrityResult = null,
+                signatureInfo = null,
+                bypassSignature = info.isPairIpDetected,
+                isInstalledApp = false,
+                iconBitmap = info.iconBitmap,
+                isMerging = false,
+            )
+        }
+        val baseFile = info.baseApkPath?.let { File(it) }
+        if (baseFile != null && baseFile.exists()) {
+            viewModelScope.launch {
+                val sig = withContext(Dispatchers.IO) { ApkSignatureReader.readFromApkFile(baseFile) }
+                _uiState.update { it.copy(signatureInfo = sig) }
             }
         }
     }
@@ -142,26 +176,7 @@ class MainScreenViewModel(
             _events.send(MainEvent.ShowMessage(context.getString(R.string.status_analyzing_file)))
             val info = packageScanner.inspectExternalFile(uri)
             if (info != null) {
-                currentExternalPackage = info
-                currentInstalledApp = null
-
-                _uiState.update {
-                    it.copy(
-                        selectedAppName = info.appName ?: info.name,
-                        selectedPackageName = info.packageName,
-                        selectedVersionName = info.versionName,
-                        selectedFileSize = info.sizeFormatted,
-                        splitCount = info.splitNames.size,
-                        splitItems = info.splitNames,
-                        selectedSplitItems = info.splitNames.toSet(),
-                        isPairIpDetected = info.isPairIpDetected,
-                        integrityResult = null,
-                        bypassSignature = info.isPairIpDetected,
-                        isInstalledApp = false,
-                        iconBitmap = info.iconBitmap,
-                        isMerging = false,
-                    )
-                }
+                applyExternalPackage(info)
                 _events.send(MainEvent.ShowMessage(context.getString(R.string.msg_loaded_file, info.appName ?: info.name)))
             } else {
                 _events.send(MainEvent.ShowMessage(context.getString(R.string.msg_cannot_read_file)))
@@ -408,24 +423,8 @@ class MainScreenViewModel(
                     if (result.autoStart) onStartMerge()
                 }
                 is IntentProcessResult.ExternalFileLoaded -> {
-                    val info = result.info
-                    currentExternalPackage = info
-                    currentInstalledApp = null
-                    _uiState.update {
-                        it.copy(
-                            selectedAppName = info.appName ?: info.name,
-                            selectedPackageName = info.packageName,
-                            selectedVersionName = info.versionName,
-                            selectedFileSize = info.sizeFormatted,
-                            splitCount = info.splitNames.size,
-                            splitItems = info.splitNames,
-                            selectedSplitItems = info.splitNames.toSet(),
-                            isPairIpDetected = info.isPairIpDetected,
-                            isInstalledApp = false,
-                            iconBitmap = info.iconBitmap,
-                        )
-                    }
-                    _events.send(MainEvent.ShowMessage(context.getString(R.string.msg_file_received_from_app, info.appName ?: info.name)))
+                    applyExternalPackage(result.info)
+                    _events.send(MainEvent.ShowMessage(context.getString(R.string.msg_file_received_from_app, result.info.appName ?: result.info.name)))
                     if (result.autoStart) onStartMerge()
                 }
                 is IntentProcessResult.Message -> {
@@ -433,6 +432,17 @@ class MainScreenViewModel(
                 }
                 null -> {}
             }
+        }
+    }
+
+    fun setSignatureSheetVisible(visible: Boolean) {
+        _uiState.update { it.copy(isSignatureSheetVisible = visible) }
+    }
+
+    fun inspectApkSignature(file: File) {
+        viewModelScope.launch {
+            val sig = withContext(Dispatchers.IO) { ApkSignatureReader.readFromApkFile(file) }
+            _uiState.update { it.copy(signatureInfo = sig, isSignatureSheetVisible = true) }
         }
     }
 
@@ -449,6 +459,34 @@ class MainScreenViewModel(
                 autoSignMergedApk = it.autoSignMergedApk,
                 bypassSignature = it.bypassSignature,
             )
+        }
+    }
+
+    fun refreshCacheSize() {
+        viewModelScope.launch {
+            val breakdown = appCacheManager.getCacheBreakdown()
+            _uiState.update { it.copy(cacheSize = breakdown.formattedTotalSize) }
+        }
+    }
+
+    fun showClearCacheDialog(visible: Boolean) {
+        if (visible) refreshCacheSize()
+        _uiState.update { it.copy(isClearCacheDialogVisible = visible) }
+    }
+
+    fun clearCache(includeLocalMerged: Boolean = false) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isClearingCache = true) }
+            val bytesFreed = appCacheManager.clearCache(includeLocalMerged)
+            val breakdown = appCacheManager.getCacheBreakdown()
+            _uiState.update {
+                it.copy(
+                    isClearingCache = false,
+                    cacheSize = breakdown.formattedTotalSize,
+                    isClearCacheDialogVisible = false
+                )
+            }
+            _events.send(MainEvent.ShowMessage(context.getString(R.string.home_cache_freed_message, appCacheManager.formatBytes(bytesFreed))))
         }
     }
 }

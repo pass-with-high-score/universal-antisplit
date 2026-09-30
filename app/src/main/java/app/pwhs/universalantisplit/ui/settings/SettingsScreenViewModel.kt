@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.datastore.preferences.core.edit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.pwhs.universalantisplit.data.cache.AppCacheManager
 import app.pwhs.universalantisplit.data.local.PreferenceKeys
 import app.pwhs.universalantisplit.data.local.dataStore
 import app.pwhs.universalantisplit.data.repository.HistoryRepository
@@ -18,6 +17,12 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+import android.net.Uri
+import app.pwhs.universalantisplit.domain.KeystoreInfo
+import app.pwhs.universalantisplit.engine.signer.ApkSignerManager
+import app.pwhs.universalantisplit.R
+import timber.log.Timber
+
 data class SettingsUiState(
     val themeMode: ThemeMode = ThemeMode.System,
     val dynamicColor: Boolean = false,
@@ -29,14 +34,15 @@ data class SettingsUiState(
     val cleanCache: Boolean = true,
     val outputDir: String = "/sdcard/Download/UniversalAntiSplit",
     val appLanguage: AppLanguage = AppLanguage.System,
-    val cacheSize: String = "0 B",
-    val isClearingCache: Boolean = false,
+    val keystoreInfo: KeystoreInfo? = null,
+    val isKeystoreLoading: Boolean = false,
+    val keystoreMessage: String? = null,
 )
 
 class SettingsScreenViewModel(
     private val context: Context,
-    private val appCacheManager: AppCacheManager,
     private val historyRepository: HistoryRepository,
+    private val apkSignerManager: ApkSignerManager,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -74,28 +80,7 @@ class SettingsScreenViewModel(
                 }
             }
         }
-        refreshCacheSize()
-    }
-
-    fun refreshCacheSize() {
-        viewModelScope.launch {
-            val breakdown = appCacheManager.getCacheBreakdown()
-            _uiState.update { it.copy(cacheSize = breakdown.formattedTotalSize) }
-        }
-    }
-
-    fun clearCache(includeLocalMerged: Boolean = false) {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isClearingCache = true) }
-            appCacheManager.clearCache(includeLocalMerged)
-            val breakdown = appCacheManager.getCacheBreakdown()
-            _uiState.update {
-                it.copy(
-                    isClearingCache = false,
-                    cacheSize = breakdown.formattedTotalSize
-                )
-            }
-        }
+        loadKeystoreInfo()
     }
 
     fun clearAllHistory() {
@@ -166,5 +151,91 @@ class SettingsScreenViewModel(
                 prefs[PreferenceKeys.CLEAN_CACHE] = enabled
             }
         }
+    }
+
+    fun loadKeystoreInfo() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isKeystoreLoading = true) }
+            val info = apkSignerManager.getKeystoreInfo()
+            _uiState.update { it.copy(keystoreInfo = info, isKeystoreLoading = false) }
+        }
+    }
+
+    fun exportKeystore(uri: Uri) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isKeystoreLoading = true) }
+            val result = runCatching {
+                context.contentResolver.openOutputStream(uri)?.use { output ->
+                    apkSignerManager.exportKeystore(output).getOrThrow()
+                } ?: throw IllegalStateException("Could not open output stream")
+            }
+            if (result.isSuccess) {
+                _uiState.update {
+                    it.copy(
+                        isKeystoreLoading = false,
+                        keystoreMessage = context.getString(R.string.keystore_export_success)
+                    )
+                }
+            } else {
+                Timber.e(result.exceptionOrNull(), "Failed to export keystore")
+                _uiState.update {
+                    it.copy(
+                        isKeystoreLoading = false,
+                        keystoreMessage = context.getString(
+                            R.string.keystore_export_error,
+                            result.exceptionOrNull()?.localizedMessage ?: "Unknown error"
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    fun importKeystore(uri: Uri, password: String? = null, alias: String? = null) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isKeystoreLoading = true) }
+            val result = runCatching {
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    apkSignerManager.importKeystore(input, password, alias).getOrThrow()
+                } ?: throw IllegalStateException("Could not open input stream")
+            }
+            result.onSuccess { newInfo ->
+                _uiState.update {
+                    it.copy(
+                        keystoreInfo = newInfo,
+                        isKeystoreLoading = false,
+                        keystoreMessage = context.getString(R.string.keystore_import_success)
+                    )
+                }
+            }.onFailure { error ->
+                Timber.e(error, "Failed to import keystore")
+                _uiState.update {
+                    it.copy(
+                        isKeystoreLoading = false,
+                        keystoreMessage = context.getString(
+                            R.string.keystore_import_error,
+                            error.localizedMessage ?: "Unknown error"
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    fun resetKeystore() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isKeystoreLoading = true) }
+            apkSignerManager.resetToDefaultKeystore()
+                .onSuccess { info ->
+                    _uiState.update { it.copy(keystoreInfo = info, isKeystoreLoading = false) }
+                }
+                .onFailure {
+                    _uiState.update { it.copy(isKeystoreLoading = false) }
+                }
+        }
+    }
+
+    fun clearKeystoreMessage() {
+        _uiState.update { it.copy(keystoreMessage = null) }
     }
 }

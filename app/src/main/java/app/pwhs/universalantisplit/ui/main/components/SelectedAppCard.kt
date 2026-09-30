@@ -3,6 +3,7 @@ package app.pwhs.universalantisplit.ui.main.components
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,16 +23,19 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Android
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Fingerprint
 import androidx.compose.material.icons.rounded.SwapHoriz
 import androidx.compose.material.icons.rounded.WarningAmber
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -74,6 +78,8 @@ fun SelectedAppCard(
     extendedColors: ExtendedColors,
     modifier: Modifier = Modifier,
     integrityResult: IntegrityCheckResult? = null,
+    signatureInfo: app.pwhs.universalantisplit.domain.signature.AppSignatureInfo? = null,
+    onViewSignatureClick: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
@@ -260,19 +266,74 @@ fun SelectedAppCard(
                     )
                 }
 
-                if (integrityResult?.hasV2Signature == true) {
+                val hasV1 = signatureInfo?.hasV1 == true
+                val hasV2 = signatureInfo?.hasV2 == true || integrityResult?.hasV2Signature == true
+                val hasV3 = signatureInfo?.hasV3 == true || integrityResult?.hasV3Signature == true
+                val hasV4 = signatureInfo?.hasV4 == true
+
+                if (hasV1) {
+                    StatusBadge(
+                        text = stringResource(R.string.badge_scheme_v1),
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                    )
+                }
+                if (hasV2) {
                     StatusBadge(
                         text = stringResource(R.string.badge_scheme_v2),
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                         contentColor = MaterialTheme.colorScheme.onTertiaryContainer
                     )
                 }
-
-                if (integrityResult?.hasV3Signature == true) {
+                if (hasV3) {
                     StatusBadge(
                         text = stringResource(R.string.badge_scheme_v3),
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                         contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                    )
+                }
+                if (hasV4) {
+                    StatusBadge(
+                        text = stringResource(R.string.badge_scheme_v4),
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                    )
+                }
+            }
+
+            // Signature Action Button
+            if (onViewSignatureClick != null) {
+                Spacer(Modifier.height(Spacing.M))
+                OutlinedButton(
+                    onClick = onViewSignatureClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(44.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.35f)
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Fingerprint,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(Modifier.width(Spacing.S))
+                    Text(
+                        text = stringResource(R.string.signature_btn_inspect),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(Modifier.weight(1f))
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }

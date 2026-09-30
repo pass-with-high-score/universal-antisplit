@@ -9,6 +9,7 @@ import app.pwhs.universalantisplit.domain.SplitPackageInfo
 import app.pwhs.universalantisplit.engine.merger.ApkMerger
 import app.pwhs.universalantisplit.engine.merger.ApkOutputManager
 import app.pwhs.universalantisplit.engine.merger.SplitExtractionHelper
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import junit.framework.TestCase.assertEquals
@@ -29,6 +30,7 @@ class MainScreenViewModelTest {
 
     private lateinit var mockHistoryRepository: app.pwhs.universalantisplit.data.repository.HistoryRepository
     private lateinit var mockWorkManager: androidx.work.WorkManager
+    private lateinit var mockCacheManager: app.pwhs.universalantisplit.data.cache.AppCacheManager
 
     @Before
     fun setup() {
@@ -40,6 +42,15 @@ class MainScreenViewModelTest {
         mockOutputManager = mockk(relaxed = true)
         mockExtractionHelper = mockk(relaxed = true)
         mockHistoryRepository = mockk(relaxed = true)
+        mockCacheManager = mockk(relaxed = true) {
+            coEvery { getCacheBreakdown() } returns app.pwhs.universalantisplit.data.cache.AppCacheManager.CacheBreakdown(
+                stagingSize = 0L,
+                tempApkSize = 0L,
+                localMergedSize = 0L,
+                totalSize = 0L,
+                formattedTotalSize = "0 B"
+            )
+        }
         mockWorkManager = mockk(relaxed = true) {
             every { getWorkInfosForUniqueWorkFlow(any()) } returns kotlinx.coroutines.flow.flowOf(emptyList())
         }
@@ -54,7 +65,8 @@ class MainScreenViewModelTest {
             apkOutputManager = mockOutputManager,
             splitExtractionHelper = mockExtractionHelper,
             historyRepository = mockHistoryRepository,
-            workManager = mockWorkManager
+            workManager = mockWorkManager,
+            appCacheManager = mockCacheManager,
         )
     }
 

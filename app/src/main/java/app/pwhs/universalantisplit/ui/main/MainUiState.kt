@@ -29,6 +29,11 @@ data class MainUiState(
     val lastCompletedDisplayPath: String? = null,
     val integrityResult: IntegrityCheckResult? = null,
     val batchState: BatchProgressState = BatchProgressState(),
+    val cacheSize: String = "0 B",
+    val isClearingCache: Boolean = false,
+    val isClearCacheDialogVisible: Boolean = false,
+    val signatureInfo: app.pwhs.universalantisplit.domain.signature.AppSignatureInfo? = null,
+    val isSignatureSheetVisible: Boolean = false,
 )
 
 sealed interface MainEvent {

@@ -1,6 +1,9 @@
 package app.pwhs.universalantisplit.ui.settings
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import coil.compose.AsyncImage
 import androidx.compose.foundation.border
@@ -23,7 +26,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Code
 import androidx.compose.material.icons.rounded.FolderZip
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Info
@@ -55,9 +60,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.pwhs.universalantisplit.R
@@ -65,6 +73,8 @@ import app.pwhs.universalantisplit.domain.AppThemePreset
 import app.pwhs.universalantisplit.domain.ThemeMode
 import app.pwhs.universalantisplit.theme.Spacing
 import app.pwhs.universalantisplit.ui.components.SettingsSection
+import app.pwhs.universalantisplit.ui.settings.components.AboutSettingsSection
+import app.pwhs.universalantisplit.ui.settings.components.KeystoreSettingsCard
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -222,15 +232,7 @@ fun SettingsScreen(
                             )
                         }
 
-                        Spacer(Modifier.height(Spacing.L))
 
-                        CacheManagementSection(
-                            cacheSize = state.cacheSize,
-                            isClearingCache = state.isClearingCache,
-                            onClearTemp = { viewModel.clearCache(includeLocalMerged = false) },
-                            onClearAll = { viewModel.clearCache(includeLocalMerged = true) },
-                            onHistoryClick = onHistoryClick
-                        )
                     }
                 }
             }
@@ -294,77 +296,22 @@ fun SettingsScreen(
 
                         Spacer(Modifier.height(Spacing.M))
 
-                        Surface(
-                            shape = MaterialTheme.shapes.medium,
-                            color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.6f),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(modifier = Modifier.padding(Spacing.M)) {
-                                Text(
-                                    text = stringResource(R.string.settings_default_keystore_label),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Spacer(Modifier.height(2.dp))
-                                Text(
-                                    text = stringResource(R.string.settings_default_keystore_value),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
+                        KeystoreSettingsCard(
+                            keystoreInfo = state.keystoreInfo,
+                            isLoading = state.isKeystoreLoading,
+                            message = state.keystoreMessage,
+                            onExportKeystore = viewModel::exportKeystore,
+                            onImportKeystore = viewModel::importKeystore,
+                            onResetKeystore = viewModel::resetKeystore,
+                            onClearMessage = viewModel::clearKeystoreMessage,
+                        )
                     }
                 }
             }
 
             // 4. Giới thiệu & Thông tin
             item {
-                SettingsSection(
-                    title = stringResource(R.string.settings_section_about),
-                    icon = Icons.Rounded.Info,
-                    collapsible = true,
-                    defaultExpanded = true,
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(Spacing.L),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        AsyncImage(
-                            model = R.drawable.ic_app_logo,
-                            contentDescription = stringResource(R.string.app_name),
-                            modifier = Modifier
-                                .size(72.dp)
-                                .clip(RoundedCornerShape(18.dp))
-                        )
-
-                        Spacer(Modifier.height(Spacing.M))
-
-                        Text(
-                            text = stringResource(R.string.app_name),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-
-                        Text(
-                            text = stringResource(R.string.app_version_info),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-
-                        Spacer(Modifier.height(Spacing.S))
-
-                        Text(
-                            text = stringResource(R.string.app_description),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(horizontal = Spacing.M)
-                        )
-                    }
-                }
+                AboutSettingsSection()
             }
 
             item { Spacer(Modifier.height(Spacing.XXL)) }

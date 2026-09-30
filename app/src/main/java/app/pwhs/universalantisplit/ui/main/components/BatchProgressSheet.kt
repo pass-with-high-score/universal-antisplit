@@ -21,7 +21,8 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.Layers
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material.icons.rounded.WarningAmber
+import app.pwhs.universalantisplit.ui.components.AppConfirmDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -268,29 +269,19 @@ fun BatchProgressSheet(
     }
 
     if (showCancelDialog) {
-        AlertDialog(
+        AppConfirmDialog(
             onDismissRequest = { showCancelDialog = false },
-            title = { Text(stringResource(R.string.batch_dialog_cancel_title)) },
-            text = { Text(stringResource(R.string.batch_dialog_cancel_desc)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showCancelDialog = false
-                        onCancel()
-                    }
-                ) {
-                    Text(
-                        text = stringResource(R.string.batch_dialog_cancel_confirm),
-                        color = MaterialTheme.colorScheme.error,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+            icon = Icons.Rounded.WarningAmber,
+            isDestructive = true,
+            title = stringResource(R.string.batch_dialog_cancel_title),
+            message = stringResource(R.string.batch_dialog_cancel_desc),
+            confirmText = stringResource(R.string.batch_dialog_cancel_confirm),
+            cancelText = stringResource(R.string.batch_dialog_cancel_dismiss),
+            onConfirm = {
+                showCancelDialog = false
+                onCancel()
             },
-            dismissButton = {
-                TextButton(onClick = { showCancelDialog = false }) {
-                    Text(stringResource(R.string.batch_dialog_cancel_dismiss))
-                }
-            }
+            onCancel = { showCancelDialog = false }
         )
     }
 }
