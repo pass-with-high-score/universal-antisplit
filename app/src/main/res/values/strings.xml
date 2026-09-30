@@ -203,7 +203,7 @@
     <string name="settings_bypass_no_pairip_hint">Không có libpairipcore.so (Khuyên tắt)</string>
     <string name="settings_bypass_pairip_found_hint">Phát hiện libpairipcore.so (Khuyên bật)</string>
 
-    <!-- Chọn nhiều ứng dụng (Multi-select) -->
+    <!-- Chọn nhiều ứng dụng (Multi-select) & Tiến trình hàng loạt (Batch Progress) -->
     <string name="picker_mode_multi_select">Chọn nhiều</string>
     <string name="picker_mode_single_select">Chọn đơn</string>
     <string name="picker_select_all">Chọn tất cả</string>
@@ -212,4 +212,29 @@
     <string name="picker_btn_merge_selected">Gộp %1$d ứng dụng đã chọn</string>
     <string name="msg_batch_merge_started">Đang bắt đầu gộp hàng loạt %1$d ứng dụng...</string>
     <string name="msg_batch_merge_completed">Đã hoàn thành gộp hàng loạt %1$d ứng dụng.</string>
+
+    <string name="batch_progress_title">Gộp hàng loạt (%1$d/%2$d)</string>
+    <string name="batch_progress_overall_label">Tổng tiến trình: %1$d%%</string>
+    <string name="batch_active_title">Ứng dụng đang xử lý</string>
+    <string name="batch_queue_title">Hàng đợi xử lý (%1$d)</string>
+    <string name="batch_status_pending">Đang chờ</string>
+    <string name="batch_status_processing">Đang xử lý...</string>
+    <string name="batch_status_completed">Hoàn tất</string>
+    <string name="batch_status_failed">Thất bại</string>
+    <string name="batch_action_minimize">Thu nhỏ</string>
+    <string name="batch_action_cancel">Hủy</string>
+    <string name="batch_dialog_cancel_title">Dừng tiến trình gộp?</string>
+    <string name="batch_dialog_cancel_desc">Tất cả các ứng dụng còn lại trong hàng đợi sẽ bị hủy.</string>
+    <string name="batch_dialog_cancel_confirm">Dừng gộp</string>
+    <string name="batch_dialog_cancel_dismiss">Tiếp tục</string>
+    <string name="batch_minibar_title">Đang gộp %1$d/%2$d: %3$s</string>
+    <string name="batch_minibar_desc">Chạm để xem chi tiết tiến trình (%1$d%%)</string>
+    <string name="batch_summary_title">Hoàn tất gộp hàng loạt</string>
+    <string name="batch_summary_desc_success">Đã gộp thành công %1$d/%2$d ứng dụng</string>
+    <string name="batch_summary_desc_partial">Hoàn thành %1$d/%2$d ứng dụng (%3$d lỗi)</string>
+    <string name="batch_action_install">Cài đặt</string>
+    <string name="batch_action_share">Chia sẻ</string>
+    <string name="batch_action_done">Xong</string>
+    <string name="batch_action_history">Xem Lịch sử</string>
+    <string name="batch_error_prefix">Lỗi: %1$s</string>
 </resources>

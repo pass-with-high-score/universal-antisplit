@@ -28,9 +28,11 @@ data class MainUiState(
     val lastCompletedApkFile: File? = null,
     val lastCompletedDisplayPath: String? = null,
     val integrityResult: IntegrityCheckResult? = null,
+    val batchState: BatchProgressState = BatchProgressState(),
 )
 
 sealed interface MainEvent {
     data class ShowMessage(val message: String) : MainEvent
     data class MergeCompleted(val outputPath: String, val outputFile: File, val outputUri: Uri) : MainEvent
+    data class BatchMergeCompleted(val batchState: BatchProgressState) : MainEvent
 }

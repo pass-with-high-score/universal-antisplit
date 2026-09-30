@@ -352,6 +352,14 @@ class MainScreenViewModel(
         }
     }
 
+    private val batchMergeHandler = BatchMergeHandler(
+        context = context,
+        workManager = workManager,
+        scope = viewModelScope,
+        uiStateFlow = _uiState,
+        sendEvent = { _events.send(it) }
+    )
+
     fun onBatchMergeApps(apps: List<InstalledAppInfo>) {
         if (apps.isEmpty()) return
         showAppPicker(false)
@@ -366,42 +374,23 @@ class MainScreenViewModel(
             _events.send(MainEvent.ShowMessage(context.getString(R.string.msg_batch_merge_started, apps.size)))
         }
 
-        val requests = apps.map { app ->
-            val inputData = workDataOf(
-                ApkMergerWorker.KEY_IS_INSTALLED_APP to true,
-                ApkMergerWorker.KEY_INSTALLED_BASE_APK_PATH to app.baseApkPath,
-                ApkMergerWorker.KEY_INSTALLED_SPLIT_PATHS to app.splitPaths.toTypedArray(),
-                ApkMergerWorker.KEY_SELECTED_SPLIT_NAMES to app.splitPaths.map { java.io.File(it).name }.toTypedArray(),
-                ApkMergerWorker.KEY_AUTO_SIGN to _uiState.value.autoSignMergedApk,
-                ApkMergerWorker.KEY_BYPASS_SIGNATURE to false,
-                ApkMergerWorker.KEY_APP_NAME to app.appName,
-                ApkMergerWorker.KEY_PACKAGE_NAME to app.packageName,
-                ApkMergerWorker.KEY_VERSION_NAME to app.versionName
-            )
-            OneTimeWorkRequestBuilder<ApkMergerWorker>()
-                .setInputData(inputData)
-                .addTag("apk_merge")
-                .addTag("batch_merge")
-                .build()
-        }
-
-        var continuation = workManager.beginUniqueWork(
-            ApkMergerWorker.WORK_NAME,
-            ExistingWorkPolicy.REPLACE,
-            requests.first()
+        batchMergeHandler.startBatchMerge(
+            apps = apps,
+            autoSign = _uiState.value.autoSignMergedApk,
+            bypassSignature = false
         )
-        for (i in 1 until requests.size) {
-            continuation = continuation.then(requests[i])
-        }
-        continuation.enqueue()
+    }
 
-        _uiState.update {
-            it.copy(
-                isMerging = true,
-                mergeProgress = 0.05f,
-                mergeStatusText = context.getString(R.string.msg_batch_merge_started, apps.size)
-            )
-        }
+    fun setBatchSheetVisible(visible: Boolean) {
+        batchMergeHandler.setSheetVisible(visible)
+    }
+
+    fun onCancelBatchMerge() {
+        batchMergeHandler.cancelBatch()
+    }
+
+    fun onDismissBatchSummary() {
+        batchMergeHandler.dismissBatch()
     }
 
     private val externalIntentHandler = ExternalIntentHandler(context, packageScanner)

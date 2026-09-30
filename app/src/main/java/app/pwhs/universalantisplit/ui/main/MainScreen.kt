@@ -57,7 +57,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.navigation3.runtime.NavKey
+import app.pwhs.universalantisplit.History
 import app.pwhs.universalantisplit.R
 import app.pwhs.universalantisplit.Settings
 import app.pwhs.universalantisplit.theme.LocalExtendedColors
@@ -66,6 +69,9 @@ import org.koin.androidx.compose.koinViewModel
 import app.pwhs.universalantisplit.ui.components.AppPickerSheet
 import app.pwhs.universalantisplit.ui.components.EmptyStateView
 import app.pwhs.universalantisplit.ui.components.SettingsSection
+import app.pwhs.universalantisplit.ui.main.components.BatchMiniProgressBar
+import app.pwhs.universalantisplit.ui.main.components.BatchProgressSheet
+import app.pwhs.universalantisplit.ui.main.components.BatchSummaryDialog
 import app.pwhs.universalantisplit.ui.main.components.MergeProgressSheet
 import app.pwhs.universalantisplit.ui.main.components.MergeSuccessDialog
 import app.pwhs.universalantisplit.ui.main.components.SelectedAppCard
@@ -103,6 +109,9 @@ fun MainScreen(
                 is MainEvent.MergeCompleted -> {
                     successDialogData = Pair(event.outputPath, event.outputFile)
                 }
+                is MainEvent.BatchMergeCompleted -> {
+                    // Handled directly via batchState in UI
+                }
             }
         }
     }
@@ -114,6 +123,32 @@ fun MainScreen(
         progress = state.mergeProgress,
         statusText = state.mergeStatusText,
         sheetState = mergeSheetState,
+    )
+
+    BatchProgressSheet(
+        batchState = state.batchState,
+        onMinimize = { viewModel.setBatchSheetVisible(false) },
+        onCancel = { viewModel.onCancelBatchMerge() }
+    )
+
+    BatchSummaryDialog(
+        batchState = state.batchState,
+        onInstallItem = { file ->
+            runCatching {
+                context.startActivity(viewModel.getInstallIntent(file))
+            }
+        },
+        onShareItem = { file ->
+            runCatching {
+                val shareIntent = Intent.createChooser(viewModel.getShareIntent(file), null)
+                shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(shareIntent)
+            }
+        },
+        onViewHistory = {
+            onItemClick(History)
+        },
+        onDismiss = { viewModel.onDismissBatchSummary() }
     )
 
     if (state.isAppPickerVisible) {
@@ -183,13 +218,17 @@ fun MainScreen(
         },
         modifier = modifier
     ) { paddingValues ->
-        LazyColumn(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = Spacing.L),
-            verticalArrangement = Arrangement.spacedBy(Spacing.L)
         ) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = Spacing.L),
+                verticalArrangement = Arrangement.spacedBy(Spacing.L)
+            ) {
             item { Spacer(Modifier.height(Spacing.XS)) }
 
             // File selection banner / Empty state
@@ -389,5 +428,14 @@ fun MainScreen(
 
             item { Spacer(Modifier.height(Spacing.XXL)) }
         }
+
+        BatchMiniProgressBar(
+            batchState = state.batchState,
+            onExpand = { viewModel.setBatchSheetVisible(true) },
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+        )
     }
+}
 }
