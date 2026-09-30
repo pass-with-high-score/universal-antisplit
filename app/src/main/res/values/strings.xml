@@ -237,4 +237,53 @@
     <string name="batch_action_done">Xong</string>
     <string name="batch_action_history">Xem Lịch sử</string>
     <string name="batch_error_prefix">Lỗi: %1$s</string>
+
+    <!-- Onboarding Flow -->
+    <string name="onboarding_skip">Bỏ qua</string>
+    <string name="onboarding_next">Tiếp tục</string>
+    <string name="onboarding_back">Quay lại</string>
+    <string name="onboarding_get_started">Bắt đầu trải nghiệm</string>
+
+    <!-- Onboarding Page 1: Welcome -->
+    <string name="onboarding_welcome_title">Chào mừng đến với Universal Anti-Split</string>
+    <string name="onboarding_welcome_subtitle">Giải pháp gộp Split APK chuyên nghiệp</string>
+    <string name="onboarding_welcome_desc">Gộp các tệp Split APK (Base, ABI, Ngôn ngữ, Màn hình) thành một tệp APK độc lập hoàn chỉnh, tương thích với mọi thiết bị Android.</string>
+    <string name="onboarding_welcome_badge_base">Base APK</string>
+    <string name="onboarding_welcome_badge_abi">Config ABI</string>
+    <string name="onboarding_welcome_badge_lang">Config Lang</string>
+    <string name="onboarding_welcome_badge_density">Config Density</string>
+    <string name="onboarding_welcome_badge_merged">1 APK Độc Lập</string>
+
+    <!-- Onboarding Page 2: Features -->
+    <string name="onboarding_features_title">Sức Mạnh &amp; Công Nghệ</string>
+    <string name="onboarding_features_subtitle">Tối ưu hóa hiệu năng tầng nhị phân</string>
+    <string name="onboarding_feature_rust_title">Rust NDK Core Siêu Tốc</string>
+    <string name="onboarding_feature_rust_desc">Hợp nhất resources.arsc và renumber DEX chỉ trong vài giây.</string>
+    <string name="onboarding_feature_batch_title">Gộp Hàng Loạt Tự Động</string>
+    <string name="onboarding_feature_batch_desc">Chọn nhiều app cùng lúc và quản lý tiến trình theo hàng đợi thông minh.</string>
+    <string name="onboarding_feature_sign_title">Tự Động Ký Số APK</string>
+    <string name="onboarding_feature_sign_desc">Tạo Keystore RSA 2048-bit trên máy và ký chuẩn Scheme v1, v2, v3.</string>
+    <string name="onboarding_feature_hook_title">Kill Signature &amp; Bypass PairIP</string>
+    <string name="onboarding_feature_hook_desc">Tiêm hook PMS tự động để ứng dụng chạy độc lập không bị crash.</string>
+
+    <!-- Onboarding Page 3: Permissions -->
+    <string name="onboarding_permissions_title">Cấp Quyền Hệ Thống</string>
+    <string name="onboarding_permissions_subtitle">Để ứng dụng hoạt động trơn tru và an toàn</string>
+    <string name="onboarding_perm_notifications_title">Thông Báo Tiến Trình</string>
+    <string name="onboarding_perm_notifications_desc">Theo dõi thanh tiến trình khi gộp các gói ứng dụng nặng chạy ngầm.</string>
+    <string name="onboarding_perm_storage_title">Quản Lý Tệp &amp; Bộ Nhớ</string>
+    <string name="onboarding_perm_storage_desc">Đọc tệp chia nhỏ và lưu APK độc lập vào thư mục Downloads.</string>
+    <string name="onboarding_perm_install_title">Cài Đặt Ứng Dụng Ngoài</string>
+    <string name="onboarding_perm_install_desc">Cho phép cài đặt ngay tệp APK sau khi gộp thành công.</string>
+    <string name="onboarding_perm_granted">Đã cho phép</string>
+    <string name="onboarding_perm_grant">Cấp quyền</string>
+    <string name="onboarding_perm_note">Bạn có thể thiết lập hoặc thay đổi các quyền này bất cứ lúc nào trong Cài đặt hệ thống.</string>
+
+    <!-- Onboarding Page 4: Quick Setup -->
+    <string name="onboarding_setup_title">Thiết Lập Ban Đầu</string>
+    <string name="onboarding_setup_subtitle">Cá nhân hóa giao diện và trải nghiệm</string>
+    <string name="onboarding_setup_lang_label">Ngôn ngữ hiển thị</string>
+    <string name="onboarding_setup_theme_label">Chế độ giao diện</string>
+    <string name="onboarding_setup_ready_title">Mọi thứ đã sẵn sàng!</string>
+    <string name="onboarding_setup_ready_desc">Bắt đầu gộp và tạo những tệp APK độc lập đầu tiên của bạn ngay bây giờ.</string>
 </resources>

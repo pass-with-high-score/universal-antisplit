@@ -7,3 +7,4 @@ import kotlinx.serialization.Serializable
 @Serializable data object Settings : NavKey
 @Serializable data object History : NavKey
 @Serializable data object Language : NavKey
+@Serializable data object Onboarding : NavKey

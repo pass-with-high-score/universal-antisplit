@@ -20,4 +20,5 @@ object PreferenceKeys {
     val CLEAN_CACHE = booleanPreferencesKey("clean_cache")
     val OUTPUT_DIR = stringPreferencesKey("output_dir")
     val APP_LANGUAGE = stringPreferencesKey("app_language")
+    val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
 }

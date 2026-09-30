@@ -14,22 +14,39 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
+import app.pwhs.universalantisplit.data.local.PreferenceKeys
+import app.pwhs.universalantisplit.data.local.dataStore
 import app.pwhs.universalantisplit.ui.history.HistoryScreen
 import app.pwhs.universalantisplit.ui.main.MainScreen
+import app.pwhs.universalantisplit.ui.onboarding.OnboardingScreen
 import app.pwhs.universalantisplit.ui.settings.LanguageScreen
 import app.pwhs.universalantisplit.ui.settings.SettingsScreen
+import kotlinx.coroutines.flow.first
 
 @Composable
 fun MainNavigation() {
-    val backStack = rememberNavBackStack(Main)
-    val currentDestination = backStack.lastOrNull() ?: Main
+    val context = LocalContext.current
+    val isOnboardingCompleted by produceState<Boolean?>(initialValue = null) {
+        value = context.dataStore.data.first()[PreferenceKeys.ONBOARDING_COMPLETED] ?: false
+    }
 
-    val showBottomBar = currentDestination !is Language
+    if (isOnboardingCompleted == null) {
+        return
+    }
+
+    val initialNavKey = if (isOnboardingCompleted == true) Main else Onboarding
+    val backStack = rememberNavBackStack(initialNavKey)
+    val currentDestination = backStack.lastOrNull() ?: initialNavKey
+
+    val showBottomBar = currentDestination !is Language && currentDestination !is Onboarding
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -129,6 +146,14 @@ fun MainNavigation() {
                     }
                     entry<Language> {
                         LanguageScreen(onBackClick = { backStack.removeLastOrNull() })
+                    }
+                    entry<Onboarding> {
+                        OnboardingScreen(
+                            onComplete = {
+                                backStack.clear()
+                                backStack.add(Main)
+                            }
+                        )
                     }
                 },
         )
