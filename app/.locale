@@ -1,0 +1,51 @@
+# What this module is
+
+An on-device tool that merges Split APKs (XAPK, APKM, APKS, AAB) into one standalone APK and
+re-signs it. The user picks an installed app or a file, chooses which split components to keep,
+and starts the merge. The app warns when the app is protected (Google PairIP / Play Integrity,
+native signature checks) and offers the "Kill Signature" toggle to get around it.
+The default `values/strings.xml` is **Vietnamese**, not English. `values-en` is a translation, so
+use it as the pivot language when translating from the Vietnamese source.
+
+Derived: 174 translatable string(s) across 9 locale(s), in `strings.xml`.
+
+## Audience & tone
+
+Power users and modders who know Android technical terms. Short, neutral, technical wording.
+Keep technical terms (APK, DEX, PMS Hook, SIGSEGV, syscall) in Latin script, the way the existing
+files already do. Badges and chips must fit on one line, so keep them to 1–4 words. Address the
+user informally (`vi` bạn, `fr`/`es`/`pt` impersonal or infinitive, `ru` impersonal or вы,
+`ko` -습니다 for messages and noun phrases for labels).
+
+## Do not translate
+
+- APK
+- Split APK
+- Google
+- PairIP
+- Kill Signature
+- Keystore
+- Scheme
+- libpairipcore.so
+
+## Glossary
+
+| term | locale | translation |
+| --- | --- | --- |
+| gộp | ar | دمج |
+| gộp | es | fusión |
+| gộp | fr | fusion |
+| gộp | ko | 병합 |
+| gộp | pt | fusão |
+| gộp | pt-BR | mesclagem |
+| gộp | ru | объединени |
+| gộp | zh | 合并 |
+
+## Notes per locale
+
+- The toggle is named "Kill Signature" everywhere. The Vietnamese source also calls it
+  "Bypass chữ ký" / "Bypass Signature"; translations use "Kill Signature" so that one feature has one name.
+- `pt` is European Portuguese (ficheiro, aplicação, detetado, fundir). Do not mix it with `pt-BR`.
+- `pt-BR` is Brazilian Portuguese (arquivo, aplicativo, mesclar).
+- `zh` is Simplified Chinese and uses full-width parentheses `（）` around counts.
+- `ar` keeps Latin terms as they are, mid-sentence.
