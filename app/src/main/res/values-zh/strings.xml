@@ -330,4 +330,11 @@
     <string name="about_btn_copy">复制</string>
     <string name="about_btn_ok">确定</string>
     <string name="about_copied">已复制到剪贴板</string>
+
+    <string name="about_website_title">官方网站</string>
+    <string name="about_website_url" translatable="false">antisplit.pwhs.app</string>
+    <string name="about_privacy_title">隐私政策</string>
+    <string name="about_privacy_subtitle">致力于保护用户数据与隐私</string>
+    <string name="about_terms_title">服务条款</string>
+    <string name="about_terms_subtitle">使用本应用程序的条款和条件</string>
 </resources>

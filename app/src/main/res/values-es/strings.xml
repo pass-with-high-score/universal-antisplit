@@ -330,4 +330,11 @@
     <string name="about_btn_copy">Copiar</string>
     <string name="about_btn_ok">Aceptar</string>
     <string name="about_copied">Copiado al portapapeles</string>
+
+    <string name="about_website_title">Sitio web oficial</string>
+    <string name="about_website_url" translatable="false">antisplit.pwhs.app</string>
+    <string name="about_privacy_title">Política de privacidad</string>
+    <string name="about_privacy_subtitle">Compromiso con la protección de datos y privacidad</string>
+    <string name="about_terms_title">Términos del servicio</string>
+    <string name="about_terms_subtitle">Términos y condiciones para el uso de la aplicación</string>
 </resources>

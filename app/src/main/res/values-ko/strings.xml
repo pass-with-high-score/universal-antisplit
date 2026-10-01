@@ -330,4 +330,11 @@
     <string name="about_btn_copy">복사</string>
     <string name="about_btn_ok">확인</string>
     <string name="about_copied">클립보드에 복사되었습니다</string>
+
+    <string name="about_website_title">공식 웹사이트</string>
+    <string name="about_website_url" translatable="false">antisplit.pwhs.app</string>
+    <string name="about_privacy_title">개인정보 처리방침</string>
+    <string name="about_privacy_subtitle">사용자 데이터 및 개인정보 보호에 대한 약속</string>
+    <string name="about_terms_title">서비스 이용약관</string>
+    <string name="about_terms_subtitle">애플리케이션 이용을 위한 약관 및 조건</string>
 </resources>

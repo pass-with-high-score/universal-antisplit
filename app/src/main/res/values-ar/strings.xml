@@ -330,4 +330,11 @@
     <string name="about_btn_copy">نسخ</string>
     <string name="about_btn_ok">حسناً</string>
     <string name="about_copied">تم النسخ إلى الحافظة</string>
+
+    <string name="about_website_title">الموقع الرسمي</string>
+    <string name="about_website_url" translatable="false">antisplit.pwhs.app</string>
+    <string name="about_privacy_title">سياسة الخصوصية</string>
+    <string name="about_privacy_subtitle">الالتزام بحماية بيانات المستخدم والخصوصية</string>
+    <string name="about_terms_title">شروط الخدمة</string>
+    <string name="about_terms_subtitle">الشروط والأحكام لاستخدام التطبيق</string>
 </resources>

@@ -25,8 +25,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.Code
 import androidx.compose.material.icons.rounded.Description
+import androidx.compose.material.icons.rounded.Gavel
 import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.Policy
 import androidx.compose.material.icons.rounded.Smartphone
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
@@ -128,19 +131,19 @@ fun AboutSettingsSection(
             // ── APP ──
             AboutSectionLabel(stringResource(R.string.about_section_app))
             AboutRow(
+                icon = Icons.Rounded.Language,
+                title = stringResource(R.string.about_website_title),
+                subtitle = stringResource(R.string.about_website_url),
+                showExternalIcon = true,
+                onClick = { openUrl(context, "https://antisplit.pwhs.app") }
+            )
+            AboutRowDivider()
+            AboutRow(
                 icon = Icons.Rounded.Code,
                 title = stringResource(R.string.about_project_repo),
                 subtitle = stringResource(R.string.about_view_on_github),
                 showExternalIcon = true,
                 onClick = { openUrl(context, "https://github.com/pass-with-high-score/universal-antisplit") }
-            )
-            AboutRowDivider()
-            AboutRow(
-                icon = Icons.Rounded.Description,
-                title = stringResource(R.string.about_license_title),
-                subtitle = stringResource(R.string.about_license_subtitle),
-                showExternalIcon = true,
-                onClick = { openUrl(context, "https://github.com/pass-with-high-score/universal-antisplit/blob/main/LICENSE") }
             )
 
             HorizontalDivider(
@@ -154,7 +157,7 @@ fun AboutSettingsSection(
                 drawableRes = R.drawable.ic_universal_installer,
                 title = stringResource(R.string.project_installer_title),
                 subtitle = stringResource(R.string.project_installer_desc),
-                onClick = { openUrl(context, "https://github.com/pass-with-high-score/universal-installer") }
+                onClick = { openUrl(context, "https://universal-installer.pwhs.app") }
             )
             AboutRowDivider()
             AboutRowImage(
@@ -186,6 +189,37 @@ fun AboutSettingsSection(
                 subtitle = stringResource(R.string.about_creator_subtitle),
                 showExternalIcon = true,
                 onClick = { openUrl(context, "https://github.com/pass-with-high-score") }
+            )
+
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                modifier = Modifier.padding(horizontal = Spacing.M, vertical = 6.dp)
+            )
+
+            // ── LEGAL ──
+            AboutSectionLabel(stringResource(R.string.about_section_legal))
+            AboutRow(
+                icon = Icons.Rounded.Description,
+                title = stringResource(R.string.about_license_title),
+                subtitle = stringResource(R.string.about_license_subtitle),
+                showExternalIcon = true,
+                onClick = { openUrl(context, "https://github.com/pass-with-high-score/universal-antisplit/blob/main/LICENSE") }
+            )
+            AboutRowDivider()
+            AboutRow(
+                icon = Icons.Rounded.Policy,
+                title = stringResource(R.string.about_privacy_title),
+                subtitle = stringResource(R.string.about_privacy_subtitle),
+                showExternalIcon = true,
+                onClick = { openUrl(context, "https://antisplit.pwhs.app/privacy") }
+            )
+            AboutRowDivider()
+            AboutRow(
+                icon = Icons.Rounded.Gavel,
+                title = stringResource(R.string.about_terms_title),
+                subtitle = stringResource(R.string.about_terms_subtitle),
+                showExternalIcon = true,
+                onClick = { openUrl(context, "https://antisplit.pwhs.app/terms") }
             )
 
             HorizontalDivider(

@@ -395,4 +395,11 @@
     <string name="about_btn_copy">Sao chép</string>
     <string name="about_btn_ok">OK</string>
     <string name="about_copied">Đã sao chép vào bộ nhớ tạm</string>
+
+    <string name="about_website_title">Trang web chính thức</string>
+    <string name="about_website_url" translatable="false">antisplit.pwhs.app</string>
+    <string name="about_privacy_title">Chính sách quyền riêng tư</string>
+    <string name="about_privacy_subtitle">Cam kết bảo vệ dữ liệu và quyền riêng tư</string>
+    <string name="about_terms_title">Điều khoản dịch vụ</string>
+    <string name="about_terms_subtitle">Điều khoản và quy định sử dụng ứng dụng</string>
 </resources>

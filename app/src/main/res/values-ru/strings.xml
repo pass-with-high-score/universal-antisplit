@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Universal Anti-Split</string>
     <string name="app_subtitle">Объединение Split APK и бинарный патчинг</string>
-    <string name="app_description">Инструмент для объединения Split APK (XAPK, APKM, APKS, AAB) в автономный файл APK, оформленный в едином стиле с Universal Installer.</string>
+    <string name="app_description">Инструмент для объединения Split APK (XAPK, APKM, APKS, AAB) в автономный файл APK, оформленный в едином стиле с Universal Installer.</string>
     <string name="app_version_info">Версия 1.0 (Build 1) • Rust NDK Core</string>
     <string name="status_analyzing_structure">Анализ структуры Split APK (%1$d файлов)...</string>
     <string name="status_cleaning_manifest">Очистка бинарного AndroidManifest.xml...</string>
@@ -21,7 +21,7 @@
     <string name="dialog_merge_complete_title">APK успешно объединён!</string>
     <string name="dialog_merge_complete_desc">Автономный файл APK создан и сохранён в:\n%1$s</string>
     <string name="empty_state_title">Приложение или файл не выбраны</string>
-    <string name="empty_state_subtitle">Выберите установленное приложение со Split APK или выберите файл из памяти устройства (.apk, .xapk, .apkm, .apks).</string>
+    <string name="empty_state_subtitle">Выберите установленное приложение со Split APK или выберите файл из памяти устройства (.apk, .xapk, .apkm, .apks).</string>
     <string name="btn_installed_apps">Приложения на устройстве</string>
     <string name="btn_pick_external_file">Выбрать внешний файл</string>
     <string name="action_change">Изменить</string>
@@ -75,7 +75,7 @@
     <string name="settings_clean_cache_title">Автоочистка кэша</string>
     <string name="settings_clean_cache_desc">Автоматическое удаление временных файлов APK из кэша после завершения</string>
     <string name="settings_section_signature">Подпись APK (Google apksig)</string>
-    <string name="settings_auto_sign_desc">Подпись APK ключом Keystore RSA-2048 (Scheme v1, v2, v3)</string>
+    <string name="settings_auto_sign_desc">Подпись APK ключом Keystore RSA-2048 (Scheme v1, v2, v3)</string>
     <string name="settings_default_keystore_label">Ключ подписи по умолчанию</string>
     <string name="settings_default_keystore_value">Universal Keystore RSA-2048 • SHA256withRSA</string>
     <string name="settings_section_about">О приложении</string>
@@ -87,7 +87,7 @@
     <string name="history_empty_subtitle">Объединения APK будут сохраняться здесь после завершения.</string>
     <string name="history_clear_all">Очистить всё</string>
     <string name="history_confirm_clear_title">Подтверждение очистки истории</string>
-    <string name="history_confirm_clear_message">Вы уверены, что хотите очистить всю историю? Это действие нельзя отменить.</string>
+    <string name="history_confirm_clear_message">Вы уверены, что хотите очистить всю историю? Это действие нельзя отменить.</string>
     <string name="history_source_installed">Приложение на устройстве</string>
     <string name="history_source_container">Архивный файл</string>
     <string name="history_status_success">Успешно</string>
@@ -140,7 +140,7 @@
     <string name="language_name_ar">العربية</string>
     <string name="language_name_fr">Français</string>
     <string name="history_search_action">Поиск</string>
-    <string name="history_search_placeholder">Поиск приложений, пакетов...</string>
+    <string name="history_search_placeholder">Поиск приложений, пакетов...</string>
     <string name="history_filter_all">Все</string>
     <string name="history_filter_success">Успешно</string>
     <string name="history_filter_failed">Ошибка</string>
@@ -330,4 +330,11 @@
     <string name="about_btn_copy">Копировать</string>
     <string name="about_btn_ok">ОК</string>
     <string name="about_copied">Скопировано в буфер обмена</string>
+
+    <string name="about_website_title">Официальный сайт</string>
+    <string name="about_website_url" translatable="false">antisplit.pwhs.app</string>
+    <string name="about_privacy_title">Политика конфиденциальности</string>
+    <string name="about_privacy_subtitle">Защита данных и конфиденциальности пользователей</string>
+    <string name="about_terms_title">Условия использования</string>
+    <string name="about_terms_subtitle">Условия и положения использования приложения</string>
 </resources>

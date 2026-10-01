@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Universal Anti-Split</string>
     <string name="app_subtitle">Fusão de Split APK e Correção Binária</string>
-    <string name="app_description">Ferramenta para fundir Split APK (XAPK, APKM, APKS, AAB) em um arquivo APK independente, projetada em sincronia com o Universal Installer.</string>
+    <string name="app_description">Ferramenta para fundir Split APK (XAPK, APKM, APKS, AAB) em um arquivo APK independente, projetada em sincronia com o Universal Installer.</string>
     <string name="app_version_info">Versão 1.0 (Build 1) • Rust NDK Core</string>
     <string name="status_analyzing_structure">Analisando a estrutura do Split APK (%1$d arquivos)...</string>
     <string name="status_cleaning_manifest">Limpando o AndroidManifest.xml binário...</string>
@@ -21,7 +21,7 @@
     <string name="dialog_merge_complete_title">APK mesclado com sucesso!</string>
     <string name="dialog_merge_complete_desc">O arquivo APK independente foi criado e salvo em:\n%1$s</string>
     <string name="empty_state_title">Nenhum aplicativo ou arquivo selecionado</string>
-    <string name="empty_state_subtitle">Escolha um aplicativo instalado no celular que contenha Split APKs, ou navegue por um arquivo no armazenamento do celular (.apk, .xapk, .apkm, .apks).</string>
+    <string name="empty_state_subtitle">Escolha um aplicativo instalado no celular que contenha Split APKs, ou navegue por um arquivo no armazenamento do celular (.apk, .xapk, .apkm, .apks).</string>
     <string name="btn_installed_apps">Apps no celular</string>
     <string name="btn_pick_external_file">Escolher arquivo externo</string>
     <string name="action_change">Alterar</string>
@@ -75,7 +75,7 @@
     <string name="settings_clean_cache_title">Limpeza automática de cache</string>
     <string name="settings_clean_cache_desc">Excluir automaticamente os arquivos APK temporários do cache após a conclusão</string>
     <string name="settings_section_signature">Assinatura do APK (Google apksig)</string>
-    <string name="settings_auto_sign_desc">Assinar o APK com chave Keystore RSA-2048 (Scheme v1, v2, v3)</string>
+    <string name="settings_auto_sign_desc">Assinar o APK com chave Keystore RSA-2048 (Scheme v1, v2, v3)</string>
     <string name="settings_default_keystore_label">Chave de assinatura padrão</string>
     <string name="settings_default_keystore_value">Universal Keystore RSA-2048 • SHA256withRSA</string>
     <string name="settings_section_about">Informações do aplicativo</string>
@@ -140,7 +140,7 @@
     <string name="language_name_ar">العربية</string>
     <string name="language_name_fr">Français</string>
     <string name="history_search_action">Buscar</string>
-    <string name="history_search_placeholder">Buscar aplicativo, pacote...</string>
+    <string name="history_search_placeholder">Buscar aplicativo, pacote...</string>
     <string name="history_filter_all">Todos</string>
     <string name="history_filter_success">Sucesso</string>
     <string name="history_filter_failed">Falha</string>
@@ -330,4 +330,11 @@
     <string name="about_btn_copy">Copiar</string>
     <string name="about_btn_ok">OK</string>
     <string name="about_copied">Copiado para a área de transferência</string>
+
+    <string name="about_website_title">Site oficial</string>
+    <string name="about_website_url" translatable="false">antisplit.pwhs.app</string>
+    <string name="about_privacy_title">Política de privacidade</string>
+    <string name="about_privacy_subtitle">Compromisso com a proteção de dados e privacidade</string>
+    <string name="about_terms_title">Termos de serviço</string>
+    <string name="about_terms_subtitle">Termos e condições para uso do aplicativo</string>
 </resources>

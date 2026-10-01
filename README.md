@@ -7,6 +7,9 @@
   Play Integrity / PairIP protection — built as a companion to
   <a href="https://github.com/pass-with-high-score/universal-installer">Universal Installer</a>.</p>
   <br><br>
+  <a href="https://antisplit.pwhs.app">
+    <img src="https://img.shields.io/badge/Website-antisplit.pwhs.app-00DC82?logo=googlechrome&logoColor=white">
+  </a>
   <a href="https://github.com/pass-with-high-score/universal-antisplit/releases">
     <img src="https://img.shields.io/github/v/release/pass-with-high-score/universal-antisplit">
   </a>
@@ -52,7 +55,7 @@ Join the community on Telegram:
 
 Explore the other open-source Android tools from the same developer:
 
-* [Universal Installer](https://github.com/pass-with-high-score/universal-installer) — install Split APKs and bundles
+* [Universal Installer](https://universal-installer.pwhs.app) ([GitHub](https://github.com/pass-with-high-score/universal-installer)) — install Split APKs and bundles
 * [BlockAds](https://github.com/pass-with-high-score/blockads-android) — on-device ad blocking
 
 ---
