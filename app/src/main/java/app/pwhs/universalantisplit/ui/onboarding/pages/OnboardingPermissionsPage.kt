@@ -7,6 +7,8 @@ import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -63,6 +65,16 @@ fun OnboardingPermissionsPage(
     val storageLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) {
+        onPermissionChanged()
+    }
+
+    val installLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) {
+        onPermissionChanged()
+    }
+
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         onPermissionChanged()
     }
 
@@ -140,7 +152,7 @@ fun OnboardingPermissionsPage(
                             Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
                             Uri.parse("package:${context.packageName}")
                         )
-                        runCatching { context.startActivity(intent) }
+                        runCatching { installLauncher.launch(intent) }
                     }
                 }
             )
