@@ -47,10 +47,26 @@ jobs:
       - name: Copy release artifacts
         run: |
           mkdir -p dist
-          cp app/build/outputs/apk/release/app-release.apk \
-             dist/UniversalAntiSplit-${{ steps.tag.outputs.TAG }}.apk
-          cp app/build/outputs/bundle/release/app-release.aab \
-             dist/UniversalAntiSplit-${{ steps.tag.outputs.TAG }}.aab
+          # Copy Universal APK
+          if [ -f app/build/outputs/apk/release/app-universal-release.apk ]; then
+            cp app/build/outputs/apk/release/app-universal-release.apk \
+               dist/UniversalAntiSplit-${{ steps.tag.outputs.TAG }}-universal.apk
+          elif [ -f app/build/outputs/apk/release/app-release.apk ]; then
+            cp app/build/outputs/apk/release/app-release.apk \
+               dist/UniversalAntiSplit-${{ steps.tag.outputs.TAG }}.apk
+          fi
+          # Copy ABI split APKs if present
+          for abi in arm64-v8a armeabi-v7a x86_64; do
+            if [ -f "app/build/outputs/apk/release/app-${abi}-release.apk" ]; then
+              cp "app/build/outputs/apk/release/app-${abi}-release.apk" \
+                 "dist/UniversalAntiSplit-${{ steps.tag.outputs.TAG }}-${abi}.apk"
+            fi
+          done
+          # Copy AAB
+          if [ -f app/build/outputs/bundle/release/app-release.aab ]; then
+            cp app/build/outputs/bundle/release/app-release.aab \
+               dist/UniversalAntiSplit-${{ steps.tag.outputs.TAG }}.aab
+          fi
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -63,13 +79,14 @@ jobs:
             - See commit history for changes
 
             ### Download
-            - **APK:** `UniversalAntiSplit-${{ steps.tag.outputs.TAG }}.apk` (Direct install)
+            - **Universal APK:** `UniversalAntiSplit-${{ steps.tag.outputs.TAG }}-universal.apk` (Supports all devices)
+            - **ARM64 (64-bit):** `UniversalAntiSplit-${{ steps.tag.outputs.TAG }}-arm64-v8a.apk` (Recommended for modern phones)
+            - **ARMv7 (32-bit):** `UniversalAntiSplit-${{ steps.tag.outputs.TAG }}-armeabi-v7a.apk` (Older phones)
+            - **x86_64:** `UniversalAntiSplit-${{ steps.tag.outputs.TAG }}-x86_64.apk` (Emulators / Chromebooks)
             - **AAB:** `UniversalAntiSplit-${{ steps.tag.outputs.TAG }}.aab` (Android App Bundle)
 
             > ⚠️ If prompted, enable "Install from unknown sources" in Settings.
-          files: |
-            dist/UniversalAntiSplit-${{ steps.tag.outputs.TAG }}.apk
-            dist/UniversalAntiSplit-${{ steps.tag.outputs.TAG }}.aab
+          files: dist/*
           draft: false
           prerelease: ${{ contains(steps.tag.outputs.TAG, '-') }}
         env:
