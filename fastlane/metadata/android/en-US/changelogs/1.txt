@@ -1,0 +1,8 @@
+Initial release of Universal Anti-Split v1.0.0:
+• Merge Split APKs (XAPK, APKM, APKS, AAB) into standalone APK
+• High-performance Rust NDK core + Kotlin JVM fallback
+• Manifest sanitization and resources.arsc merging
+• 16 KB page alignment for Android 15+ compatibility
+• On-device APK signing with Google apksig (v1/v2/v3)
+• Google PairIP detection & Kill Signature PMS hook
+• Batch merge, history manager, and Material You UI
