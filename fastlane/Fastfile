@@ -20,7 +20,7 @@ platform :android do
     UI.success("✅ Debug APK: #{apk_path}")
   end
 
-  desc "Build release APK (unsigned – sign via CI keystore)"
+  desc "Build release APK and AAB (signed via CI keystore)"
   lane :build_release do
     # Decode keystore from base64 env var if available
     if ENV["KEYSTORE_FILE"]
@@ -29,8 +29,7 @@ platform :android do
       File.write(keystore_path, Base64.decode64(ENV["KEYSTORE_FILE"]))
 
       gradle(
-        task: "assemble",
-        build_type: "Release",
+        tasks: ["assembleRelease", "bundleRelease"],
         properties: {
           "android.injected.signing.store.file"     => keystore_path,
           "android.injected.signing.store.password" => ENV["KEYSTORE_PASSWORD"],
@@ -39,11 +38,13 @@ platform :android do
         }
       )
     else
-      gradle(task: "assemble", build_type: "Release")
+      gradle(tasks: ["assembleRelease", "bundleRelease"])
     end
 
     apk_path = lane_context[SharedValues::GRADLE_APK_OUTPUT_PATH]
+    aab_path = lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH]
     UI.success("✅ Release APK: #{apk_path}")
+    UI.success("✅ Release AAB: #{aab_path}")
   end
 
   desc "Build release APK and create GitHub Release"

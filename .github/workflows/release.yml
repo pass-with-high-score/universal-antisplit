@@ -44,11 +44,13 @@ jobs:
         id: tag
         run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
-      - name: Rename APK with version tag
+      - name: Copy release artifacts
         run: |
           mkdir -p dist
           cp app/build/outputs/apk/release/app-release.apk \
              dist/UniversalAntiSplit-${{ steps.tag.outputs.TAG }}.apk
+          cp app/build/outputs/bundle/release/app-release.aab \
+             dist/UniversalAntiSplit-${{ steps.tag.outputs.TAG }}.aab
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -61,10 +63,13 @@ jobs:
             - See commit history for changes
 
             ### Download
-            Download the APK below and install via **Universal Installer** or `adb install`.
+            - **APK:** `UniversalAntiSplit-${{ steps.tag.outputs.TAG }}.apk` (Direct install)
+            - **AAB:** `UniversalAntiSplit-${{ steps.tag.outputs.TAG }}.aab` (Android App Bundle)
 
             > ⚠️ If prompted, enable "Install from unknown sources" in Settings.
-          files: dist/UniversalAntiSplit-${{ steps.tag.outputs.TAG }}.apk
+          files: |
+            dist/UniversalAntiSplit-${{ steps.tag.outputs.TAG }}.apk
+            dist/UniversalAntiSplit-${{ steps.tag.outputs.TAG }}.aab
           draft: false
           prerelease: ${{ contains(steps.tag.outputs.TAG, '-') }}
         env:
