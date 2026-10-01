@@ -18,13 +18,24 @@
 -keep class com.reandroid.** { *; }
 -dontwarn com.reandroid.**
 
+# Keep org.xmlpull platform interfaces (bootclasspath compatibility with XmlBlock$Parser)
+-keep class org.xmlpull.** { *; }
+-keep interface org.xmlpull.** { *; }
+-dontwarn org.xmlpull.**
+
 # Room Database
 -keep class * extends androidx.room.RoomDatabase
 -dontwarn androidx.room.paging.**
 
-# Koin Dependency Injection
+# Koin Dependency Injection & ViewModels
 -keep class * extends io.insert.koin.core.module.Module { *; }
 -dontwarn io.insert.koin.**
+-keep class * extends androidx.lifecycle.ViewModel {
+    <init>(...);
+}
+
+# Preserve annotations and signature attributes for reflection & Coroutines
+-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod
 
 # Models & Entities
 -keep class app.pwhs.universalantisplit.domain.** { *; }
