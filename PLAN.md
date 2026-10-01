@@ -91,6 +91,21 @@ graph TD
   - Scheme v2 (Full APK signing for Android 7+)
   - Scheme v3 (Key rotation support for Android 9+)
 
+### F. Runtime Environment Compatibility & Verification Stubbing
+To guarantee seamless standalone execution of merged APKs, Universal Anti-Split implements an on-device compatibility injection subsystem:
+
+1. **SplitCompat Crash Prevention (Google Play Core Stubbing):**
+   - **Problem:** Applications utilizing Google Play Feature Delivery invoke `SplitCompat.install(Context)` during `Application.attachBaseContext()` or `onCreate()`. When merged into a monolithic APK, missing split container files cause runtime `IOException`, `UnsatisfiedLinkError`, or explicit assertion crashes.
+   - **Solution:** Inject lightweight stub handlers before `Application` initialization via early-stage `ContentProvider` (`initOrder = 1999999999`) or bytecode no-op transforms, satisfying SplitCompat checks without requiring split files on disk.
+
+2. **Installer Source Verification Emulation (`com.android.vending` Emulation):**
+   - **Problem:** Applications invoke `PackageManager.getInstallerPackageName()` or `PackageManager.getInstallSourceInfo()` (Android 11+) to verify whether installation originated from the Google Play Store, aborting execution if unverified.
+   - **Solution:** Extend the existing `IPackageManager` runtime proxy (`PmsHookCore`) to intercept installer queries and emulate `com.android.vending` as the initiating, installing, and originating package identity.
+
+3. **Extended Signature & Integrity Verification Mirroring:**
+   - **Problem:** Modern applications query `GET_SIGNING_CERTIFICATES` (Android 9+ `SigningInfo`) or perform native runtime hash comparisons against the original developer certificate.
+   - **Solution:** Upgrade `PmsHookCore` with full `android.content.pm.SigningInfo` support for API levels 28 through 35, mirroring the original certificate lineage extracted into `assets/antisplit_signatures.bin`.
+
 ---
 
 ## 🚀 4. Phased Roadmap
@@ -102,6 +117,7 @@ graph TD
 | **Phase 3** | **DRM & PairIP Diagnostics** | Automated pre-check for PairIP, split compatibility report, and smart recommendation dialog. |
 | **Phase 4** | **Universal Installer Plugin Protocol** | Intent action `app.pwhs.universalinstaller.action.MERGE_SPLIT` to allow 1-click invocation from Universal Installer. |
 | **Phase 5** | **Distribution & Releases** | GitHub Releases, F-Droid & IzzyOnDroid metadata, reproducible CI builds via GitHub Actions. |
+| **Phase 6** | **Runtime Compatibility Subsystem** | SplitCompat stubbing, Google Play installer source emulation, API 28-35 `SigningInfo` proxying, user-configurable compatibility switches. |
 
 ---
 
