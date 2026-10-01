@@ -78,6 +78,10 @@
             android:name="androidx.work.impl.foreground.SystemForegroundService"
             android:foregroundServiceType="dataSync"
             tools:node="merge" />
+
+        <receiver
+            android:name=".engine.ApkInstallReceiver"
+            android:exported="false" />
     </application>
 
 </manifest>

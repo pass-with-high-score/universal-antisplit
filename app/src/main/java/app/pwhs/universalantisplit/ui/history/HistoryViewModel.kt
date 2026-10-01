@@ -5,12 +5,20 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.pwhs.universalantisplit.data.local.db.entity.ConversionHistory
 import app.pwhs.universalantisplit.data.repository.HistoryRepository
+import app.pwhs.universalantisplit.domain.ApkFileInfo
+import app.pwhs.universalantisplit.engine.ApkFileInfoReader
+import app.pwhs.universalantisplit.engine.ApkInstaller
 import app.pwhs.universalantisplit.engine.merger.ApkOutputManager
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
@@ -68,14 +76,39 @@ data class HistoryUiState(
 class HistoryViewModel(
     private val historyRepository: HistoryRepository,
     private val apkOutputManager: ApkOutputManager,
+    private val apkFileInfoReader: ApkFileInfoReader,
+    private val apkInstaller: ApkInstaller,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HistoryUiState())
     val uiState: StateFlow<HistoryUiState> = _uiState.asStateFlow()
 
+    private val _events = Channel<HistoryEvent>(Channel.BUFFERED)
+    val events = _events.receiveAsFlow()
+
     fun resolveApkFile(outputPath: String): File? = apkOutputManager.resolveApkFile(outputPath)
 
     fun createShareIntent(file: File): Intent = apkOutputManager.createShareIntent(file)
+
+    fun createOpenFolderIntent(file: File): Intent = apkOutputManager.createOpenFolderIntent(file)
+
+    fun installApk(outputPath: String) {
+        val uri = apkOutputManager.resolveApkUri(outputPath)
+        if (uri == null) {
+            viewModelScope.launch { _events.send(HistoryEvent.FileUnavailable) }
+            return
+        }
+        viewModelScope.launch {
+            runCatching { apkInstaller.install(uri) }.onFailure {
+                if (it is CancellationException) throw it
+                _events.send(HistoryEvent.InstallFailed(it.message))
+            }
+        }
+    }
+
+    suspend fun readApkInfo(outputPath: String): ApkFileInfo? = withContext(Dispatchers.IO) {
+        resolveApkFile(outputPath)?.let { apkFileInfoReader.read(it) }
+    }
 
     init {
         historyRepository.getAllHistory()

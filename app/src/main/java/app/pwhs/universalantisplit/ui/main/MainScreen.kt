@@ -137,9 +137,7 @@ fun MainScreen(
     BatchSummaryDialog(
         batchState = state.batchState,
         onInstallItem = { file ->
-            runCatching {
-                context.startActivity(viewModel.getInstallIntent(file))
-            }
+            viewModel.installApk(file)
         },
         onShareItem = { file ->
             runCatching {
@@ -169,9 +167,7 @@ fun MainScreen(
             outputPath = path,
             outputFile = file,
             onInstall = {
-                runCatching {
-                    context.startActivity(viewModel.getInstallIntent(it))
-                }
+                viewModel.installApk(it)
             },
             onShare = {
                 runCatching {

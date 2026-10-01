@@ -25,6 +25,8 @@ val appModule = module {
     single { app.pwhs.universalantisplit.engine.merger.ApkMerger(get(), get()) }
     single { app.pwhs.universalantisplit.engine.merger.ApkOutputManager(get()) }
     single { app.pwhs.universalantisplit.engine.merger.SplitExtractionHelper(get()) }
+    single { app.pwhs.universalantisplit.engine.ApkFileInfoReader(get()) }
+    single { app.pwhs.universalantisplit.engine.ApkInstaller(get()) }
 
     // Room Database & History
     single {

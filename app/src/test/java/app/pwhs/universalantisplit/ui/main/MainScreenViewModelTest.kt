@@ -67,6 +67,7 @@ class MainScreenViewModelTest {
             historyRepository = mockHistoryRepository,
             workManager = mockWorkManager,
             appCacheManager = mockCacheManager,
+            apkInstaller = mockk(relaxed = true),
         )
     }
 

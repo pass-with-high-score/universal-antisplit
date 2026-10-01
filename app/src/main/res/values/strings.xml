@@ -158,6 +158,16 @@
     <string name="history_output_path">Đường dẫn: %1$s</string>
     <string name="history_error_message">Lỗi: %1$s</string>
     <string name="history_deleted_item">Đã xóa mục khỏi lịch sử</string>
+    <string name="history_delete_item">Xóa khỏi lịch sử</string>
+    <string name="history_open_folder">Mở thư mục chứa</string>
+    <string name="history_copy_path">Sao chép đường dẫn</string>
+    <string name="history_no_folder_app">Không có ứng dụng nào để mở thư mục</string>
+    <string name="history_info_version">Phiên bản</string>
+    <string name="history_info_size">Dung lượng</string>
+    <string name="history_info_sdk">SDK</string>
+    <string name="history_info_abi">Kiến trúc (ABI)</string>
+    <string name="install_success">Đã cài đặt ứng dụng</string>
+    <string name="install_failed">Cài đặt thất bại: %1$s</string>
     <string name="history_share_apk">Chia sẻ tệp APK</string>
     <string name="history_file_not_found">Không tìm thấy tệp APK hoặc tệp đã bị xóa.</string>
 

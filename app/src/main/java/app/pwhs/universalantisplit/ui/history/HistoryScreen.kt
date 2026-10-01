@@ -42,6 +42,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -54,8 +55,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import app.pwhs.universalantisplit.R
+import app.pwhs.universalantisplit.data.local.db.entity.ConversionHistory
 import app.pwhs.universalantisplit.ui.history.components.HistoryFilterChips
+import app.pwhs.universalantisplit.ui.history.components.HistoryItemActionsSheet
 import app.pwhs.universalantisplit.ui.history.components.HistoryItemCard
 import org.koin.androidx.compose.koinViewModel
 
@@ -69,6 +74,76 @@ fun HistoryScreen(
     val context = LocalContext.current
     var isSearchActive by rememberSaveable { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
+    val clipboard = LocalClipboardManager.current
+    var selectedItem by remember { mutableStateOf<ConversionHistory?>(null) }
+
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is HistoryEvent.InstallFailed -> Toast.makeText(
+                    context,
+                    context.getString(R.string.install_failed, event.message ?: ""),
+                    Toast.LENGTH_LONG
+                ).show()
+
+                HistoryEvent.FileUnavailable -> Toast.makeText(
+                    context,
+                    context.getString(R.string.history_file_not_found),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
+    selectedItem?.let { item ->
+        val apkInfo by produceState<app.pwhs.universalantisplit.domain.ApkFileInfo?>(
+            initialValue = null,
+            key1 = item.id
+        ) {
+            value = if (item.isSuccessful) viewModel.readApkInfo(item.outputPath) else null
+        }
+
+        fun startOrToast(buildIntent: (java.io.File) -> Intent, fallbackRes: Int) {
+            val file = viewModel.resolveApkFile(item.outputPath)
+            if (file != null && file.exists()) {
+                runCatching {
+                    context.startActivity(buildIntent(file).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) })
+                }.onFailure {
+                    Toast.makeText(context, context.getString(fallbackRes), Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                Toast.makeText(context, context.getString(R.string.history_file_not_found), Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        HistoryItemActionsSheet(
+            item = item,
+            apkInfo = apkInfo,
+            onInstall = { viewModel.installApk(item.outputPath) },
+            onShare = {
+                val file = viewModel.resolveApkFile(item.outputPath)
+                if (file != null && file.exists()) {
+                    context.startActivity(
+                        Intent.createChooser(viewModel.createShareIntent(file), null)
+                            .apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+                    )
+                } else {
+                    Toast.makeText(context, context.getString(R.string.history_file_not_found), Toast.LENGTH_SHORT).show()
+                }
+            },
+            onOpenFolder = { startOrToast(viewModel::createOpenFolderIntent, R.string.history_no_folder_app) },
+            onCopyPath = {
+                clipboard.setText(AnnotatedString(item.outputPath))
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.msg_copied_package, item.outputPath),
+                    Toast.LENGTH_SHORT
+                ).show()
+            },
+            onDelete = { viewModel.deleteItem(item) },
+            onDismissRequest = { selectedItem = null }
+        )
+    }
 
     BackHandler(enabled = isSearchActive) {
         isSearchActive = false
@@ -275,22 +350,7 @@ fun HistoryScreen(
                     items(uiState.filteredHistoryList, key = { it.id }) { item ->
                         HistoryItemCard(
                             item = item,
-                            onShare = {
-                                val file = viewModel.resolveApkFile(item.outputPath)
-                                if (file != null && file.exists()) {
-                                    val shareIntent = Intent.createChooser(viewModel.createShareIntent(file), null).apply {
-                                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                    }
-                                    context.startActivity(shareIntent)
-                                } else {
-                                    Toast.makeText(
-                                        context,
-                                        context.getString(R.string.history_file_not_found),
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }
-                            },
-                            onDelete = { viewModel.deleteItem(item) }
+                            onClick = { selectedItem = item }
                         )
                     }
                 }

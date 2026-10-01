@@ -1,5 +1,6 @@
 package app.pwhs.universalantisplit.engine.merger
 
+import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
@@ -108,14 +109,38 @@ class ApkOutputManager(private val context: Context) {
         return null
     }
 
-    fun createInstallIntent(file: File): Intent {
+    fun resolveApkUri(outputPath: String): Uri? {
+        if (outputPath.isBlank()) return null
+        val name = File(outputPath).name
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val collection = MediaStore.Downloads.EXTERNAL_CONTENT_URI
+            context.contentResolver.query(
+                collection,
+                arrayOf(MediaStore.Downloads._ID),
+                "${MediaStore.Downloads.DISPLAY_NAME}=?",
+                arrayOf(name),
+                null
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    return ContentUris.withAppendedId(collection, cursor.getLong(0))
+                }
+            }
+        }
+
+        val file = resolveApkFile(outputPath) ?: return null
+        return if (file.canRead()) Uri.fromFile(file) else null
+    }
+
+    fun createOpenFolderIntent(file: File): Intent {
+        val folder = file.parentFile ?: file
         val uri = FileProvider.getUriForFile(
             context,
             "${context.packageName}.provider",
-            file
+            folder
         )
         return Intent(Intent.ACTION_VIEW).apply {
-            setDataAndType(uri, "application/vnd.android.package-archive")
+            setDataAndType(uri, "resource/folder")
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }

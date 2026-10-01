@@ -1,7 +1,6 @@
 package app.pwhs.universalantisplit.ui.history.components
 
-import android.graphics.Bitmap
-import android.graphics.drawable.Drawable
+import android.text.format.Formatter
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -17,19 +16,17 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.rounded.Android
-import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material.icons.rounded.FolderOpen
+import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,14 +34,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.drawable.toBitmap
 import app.pwhs.universalantisplit.R
 import app.pwhs.universalantisplit.data.local.db.entity.ConversionHistory
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -53,53 +48,22 @@ import java.util.Locale
 @Composable
 fun HistoryItemCard(
     item: ConversionHistory,
-    onShare: () -> Unit,
-    onDelete: () -> Unit,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
     val dateFormatted = remember(item.timestamp) {
         SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date(item.timestamp))
     }
-
-    val iconBitmap by produceState<Bitmap?>(initialValue = null, key1 = item.packageName, key2 = item.outputPath) {
-        value = withContext(Dispatchers.IO) {
-            val fromInstalled = runCatching {
-                if (item.packageName.isNotBlank()) {
-                    val drawable: Drawable = context.packageManager.getApplicationIcon(item.packageName)
-                    drawable.toBitmap(width = 96, height = 96)
-                } else null
-            }.getOrNull()
-
-            if (fromInstalled != null) {
-                fromInstalled
-            } else {
-                runCatching {
-                    if (item.outputPath.isNotBlank()) {
-                        val direct = File(item.outputPath)
-                        val file = if (direct.exists()) direct else {
-                            val localDir = context.getExternalFilesDir("merged") ?: context.filesDir
-                            File(localDir, direct.name).takeIf { it.exists() }
-                        }
-                        if (file != null && file.exists()) {
-                            val pm = context.packageManager
-                            val pi = pm.getPackageArchiveInfo(file.absolutePath, 0)
-                            val appInfo = pi?.applicationInfo
-                            if (appInfo != null) {
-                                appInfo.sourceDir = file.absolutePath
-                                appInfo.publicSourceDir = file.absolutePath
-                                appInfo.loadIcon(pm).toBitmap(width = 96, height = 96)
-                            } else null
-                        } else null
-                    } else null
-                }.getOrNull()
-            }
-        }
+    val outputFile = remember(item.outputPath) { File(item.outputPath) }
+    val sizeFormatted = remember(item.fileSizeBytes) {
+        Formatter.formatShortFileSize(context, item.fileSizeBytes)
     }
 
+    val iconBitmap by rememberApkIcon(item.packageName, item.outputPath)
+
     OutlinedCard(
-        onClick = onShare,
-        enabled = item.isSuccessful,
+        onClick = onClick,
         modifier = modifier.fillMaxWidth(),
         border = CardDefaults.outlinedCardBorder()
     ) {
@@ -168,26 +132,12 @@ fun HistoryItemCard(
 
                 Spacer(Modifier.width(4.dp))
 
-                if (item.isSuccessful) {
-                    IconButton(onClick = onShare, modifier = Modifier.size(32.dp)) {
-                        Icon(
-                            Icons.Rounded.Share,
-                            contentDescription = stringResource(R.string.history_share_apk),
-                            modifier = Modifier.size(18.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Spacer(Modifier.width(4.dp))
-                }
-
-                IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
-                    Icon(
-                        Icons.Default.Delete,
-                        contentDescription = stringResource(R.string.history_deleted_item),
-                        modifier = Modifier.size(18.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Rounded.MoreVert,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp)
+                )
             }
 
             Spacer(Modifier.height(10.dp))
@@ -209,12 +159,38 @@ fun HistoryItemCard(
             }
 
             if (item.isSuccessful && item.outputPath.isNotBlank()) {
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(8.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.FolderOpen,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(15.dp)
+                    )
+                    val folderName = outputFile.parentFile?.name.orEmpty()
+                    val meta = buildList {
+                        if (folderName.isNotBlank()) add(folderName)
+                        if (item.versionName.isNotBlank()) add("v${item.versionName}")
+                        if (item.fileSizeBytes > 0) add(sizeFormatted)
+                    }.joinToString("  •  ")
+                    Text(
+                        text = meta,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                Spacer(Modifier.height(2.dp))
                 Text(
-                    text = stringResource(R.string.history_output_path, item.outputPath),
+                    text = outputFile.name,
                     style = MaterialTheme.typography.bodySmall,
+                    fontFamily = FontFamily.Monospace,
                     color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 2,
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
             }
@@ -249,6 +225,51 @@ private fun HistoryChip(label: String, isError: Boolean = false) {
             fontWeight = FontWeight.Medium,
             color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+        )
+    }
+}
+
+@androidx.compose.ui.tooling.preview.Preview
+@Composable
+private fun HistoryItemCardPreview() {
+    app.pwhs.universalantisplit.theme.UniversalAntiSplitTheme {
+        HistoryItemCard(
+            item = ConversionHistory(
+                id = 1,
+                packageName = "com.google.android.verifier",
+                appName = "Android Developer Verifier",
+                versionName = "1.0.983304623",
+                splitCount = 5,
+                fileSizeBytes = 44_040_192L,
+                sourceType = "INSTALLED",
+                outputPath = "/sdcard/Download/UniversalAntiSplit/com.google.android.verifier_v1.0_merged.apk",
+                timestamp = 1_759_000_000_000L,
+                isSuccessful = true,
+            ),
+            onClick = {},
+        )
+    }
+}
+
+@androidx.compose.ui.tooling.preview.Preview
+@Composable
+private fun HistoryItemCardFailedPreview() {
+    app.pwhs.universalantisplit.theme.UniversalAntiSplitTheme {
+        HistoryItemCard(
+            item = ConversionHistory(
+                id = 2,
+                packageName = "com.example.broken",
+                appName = "Broken App",
+                versionName = "2.3",
+                splitCount = 3,
+                fileSizeBytes = 0L,
+                sourceType = "CONTAINER",
+                outputPath = "",
+                timestamp = 1_759_000_000_000L,
+                isSuccessful = false,
+                errorMessage = "SIGSEGV on startup",
+            ),
+            onClick = {},
         )
     }
 }

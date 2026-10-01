@@ -49,6 +49,7 @@ class MainScreenViewModel(
     private val historyRepository: HistoryRepository,
     private val workManager: WorkManager,
     private val appCacheManager: AppCacheManager,
+    private val apkInstaller: app.pwhs.universalantisplit.engine.ApkInstaller,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MainUiState())
@@ -446,7 +447,20 @@ class MainScreenViewModel(
         }
     }
 
-    fun getInstallIntent(file: File) = apkOutputManager.createInstallIntent(file)
+    fun installApk(file: File) {
+        val uri = apkOutputManager.resolveApkUri(file.absolutePath)
+        if (uri == null) {
+            viewModelScope.launch {
+                _events.send(MainEvent.ShowMessage(context.getString(R.string.history_file_not_found)))
+            }
+            return
+        }
+        viewModelScope.launch {
+            runCatching { apkInstaller.install(uri) }.onFailure {
+                _events.send(MainEvent.ShowMessage(context.getString(R.string.install_failed, it.message ?: "")))
+            }
+        }
+    }
 
     fun getShareIntent(file: File) = apkOutputManager.createShareIntent(file)
 
